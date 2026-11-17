@@ -1,0 +1,14 @@
+const app = require('./app');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log('===============================================================');
+  console.log(`PAYTRACE SERVER RUNNING ON http://localhost:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('Database Host:', process.env.DB_HOST || '127.0.0.1');
+  console.log('===============================================================');
+});

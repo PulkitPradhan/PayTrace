@@ -1,0 +1,202 @@
+const express = require('express');
+const pool = require('../config/db');
+const { authenticateToken, requireRole } = require('../middleware/auth');
+
+const router = express.Router();
+router.use(authenticateToken);
+
+// GET /api/payroll/periods
+router.get('/periods', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM payroll_periods ORDER BY start_date DESC');
+    res.json({ success: true, periods: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to fetch payroll periods.' });
+  }
+});
+
+// GET /api/payroll (HR_ADMIN sees all; Employee sees only their own)
+router.get('/', async (req, res) => {
+  let { employeeId, periodId } = req.query;
+
+  if (req.user.role !== 'HR_ADMIN') {
+    employeeId = req.user.employee_id;
+  }
+
+  try {
+    let query = `
+      SELECT 
+        p.payroll_id, p.employee_id, e.employee_code,
+        CONCAT(e.first_name, ' ', e.last_name) AS full_name,
+        d.department_name, e.designation,
+        pp.period_id, pp.period_name, pp.start_date, pp.end_date, pp.total_working_days,
+        p.present_days, p.approved_paid_leave_days, p.unpaid_leave_days, p.late_days,
+        p.gross_earnings, p.total_deductions, p.net_salary,
+        p.payment_status, p.processed_at, p.payment_date
+      FROM payrolls p
+      JOIN employees e ON p.employee_id = e.employee_id
+      JOIN departments d ON e.department_id = d.department_id
+      JOIN payroll_periods pp ON p.period_id = pp.period_id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (employeeId) {
+      query += ' AND p.employee_id = ?';
+      params.push(employeeId);
+    }
+
+    if (periodId) {
+      query += ' AND p.period_id = ?';
+      params.push(periodId);
+    }
+
+    query += ' ORDER BY pp.start_date DESC, p.payroll_id DESC';
+
+    const [rows] = await pool.query(query, params);
+    res.json({ success: true, count: rows.length, payrolls: rows });
+  } catch (err) {
+    console.error('List payrolls error:', err);
+    res.status(500).json({ success: false, error: 'Database query failed.' });
+  }
+});
+
+// GET /api/payroll/slip/:payrollId (Detailed Itemized Salary Slip)
+router.get('/slip/:payrollId', async (req, res) => {
+  const payrollId = parseInt(req.params.payrollId, 10);
+
+  try {
+    // 1. Fetch header snapshot
+    const [headers] = await pool.query(
+      `SELECT 
+        p.payroll_id, p.employee_id, e.employee_code,
+        CONCAT(e.first_name, ' ', e.last_name) AS full_name,
+        e.email, d.department_name, e.designation,
+        pp.period_id, pp.period_name, pp.start_date, pp.end_date, pp.total_working_days,
+        p.present_days, p.approved_paid_leave_days, p.unpaid_leave_days, p.late_days,
+        p.gross_earnings, p.total_deductions, p.net_salary,
+        p.payment_status, p.processed_at, p.payment_date, p.remarks
+       FROM payrolls p
+       JOIN employees e ON p.employee_id = e.employee_id
+       JOIN departments d ON e.department_id = d.department_id
+       JOIN payroll_periods pp ON p.period_id = pp.period_id
+       WHERE p.payroll_id = ?`,
+      [payrollId]
+    );
+
+    if (headers.length === 0) {
+      return res.status(404).json({ success: false, error: 'Salary slip not found.' });
+    }
+
+    const slip = headers[0];
+
+    // Data isolation check: If regular employee, verify ownership
+    if (req.user.role !== 'HR_ADMIN' && slip.employee_id !== req.user.employee_id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied: You are not authorized to view other employees\' salary slips.'
+      });
+    }
+
+    // 2. Fetch normalized itemized breakdown
+    const [items] = await pool.query(
+      `SELECT item_id, item_type, item_name, amount, description
+       FROM payroll_items
+       WHERE payroll_id = ?
+       ORDER BY item_type DESC, item_id ASC`,
+      [payrollId]
+    );
+
+    const earnings = items.filter(i => i.item_type === 'EARNING');
+    const deductions = items.filter(i => i.item_type === 'DEDUCTION');
+
+    res.json({
+      success: true,
+      slip: {
+        ...slip,
+        earnings,
+        deductions,
+        item_count: items.length
+      }
+    });
+  } catch (err) {
+    console.error('Fetch slip error:', err);
+    res.status(500).json({ success: false, error: 'Database query failed.' });
+  }
+});
+
+// POST /api/payroll/process (HR_ADMIN only: Procedural bulk or single calculation)
+router.post('/process', requireRole('HR_ADMIN'), async (req, res) => {
+  const { periodId, employeeId } = req.body;
+
+  if (!periodId) {
+    return res.status(400).json({ success: false, error: 'periodId is required.' });
+  }
+
+  try {
+    if (employeeId) {
+      // Process individual employee
+      const [spRes] = await pool.query(
+        `CALL sp_calculate_payroll(?, ?, ?, @pid, @net, @code, @msg);
+         SELECT @pid AS payroll_id, @net AS net_salary, @code AS status_code, @msg AS status_message;`,
+        [employeeId, periodId, req.user.employee_id]
+      );
+
+      const out = spRes[1][0];
+      if (out.status_code === 200) {
+        return res.json({
+          success: true,
+          message: out.status_message,
+          payroll_id: out.payroll_id,
+          net_salary: out.net_salary
+        });
+      } else {
+        return res.status(out.status_code === 409 ? 409 : 400).json({
+          success: false,
+          error: out.status_message
+        });
+      }
+    } else {
+      // Process bulk for whole period
+      const [bulkRes] = await pool.query(
+        `CALL sp_process_bulk_payroll(?, ?, @processed, @errors);
+         SELECT @processed AS processed_count, @errors AS error_count;`,
+        [periodId, req.user.employee_id]
+      );
+
+      const out = bulkRes[1][0];
+      return res.json({
+        success: true,
+        message: `Bulk payroll cycle processed. ${out.processed_count} calculated, ${out.error_count} skipped/duplicates.`,
+        processed_count: out.processed_count,
+        error_count: out.error_count
+      });
+    }
+  } catch (err) {
+    console.error('Process payroll error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Payroll processing failed.' });
+  }
+});
+
+// POST /api/payroll/test-rollback (Demonstrate ROLLBACK on constraint failure)
+router.post('/test-rollback', requireRole('HR_ADMIN'), async (req, res) => {
+  try {
+    const [rbRes] = await pool.query(
+      `CALL sp_demonstrate_transaction_rollback(1, 1, ?, @res, @msg);
+       SELECT @res AS status, @msg AS message;`,
+      [req.user.employee_id]
+    );
+
+    const out = rbRes[1][0];
+    res.json({
+      success: true,
+      demonstration: 'Transaction Rollback Test',
+      status: out.status,
+      message: out.message
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+module.exports = router;

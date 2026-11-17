@@ -8,7 +8,9 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/server.js",
+    "test": "node tests/test_suite.js",
+    "setup": "mariadb -u root -h 127.0.0.1 < database/setup.sql"
   },
   "repository": {
     "type": "git",

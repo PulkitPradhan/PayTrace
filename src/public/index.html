@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayTrace — Payroll & Attendance Management System</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Global Toast / Alert -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Auth Screen (Shown when logged out) -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="logo-mark">PT</div>
+        <h1>PayTrace</h1>
+        <p>Payroll & Attendance Management Platform</p>
+      </div>
+
+      <div class="quick-demo-banner">
+        <strong>Demo Roles (Academic Evaluation)</strong>
+        <p>One-click instant login as HR Director or Staff Engineer:</p>
+        <div class="demo-buttons">
+          <button type="button" class="btn btn-outline btn-sm" onclick="quickLogin('alice.morgan@paytrace.local', 'Admin123!')">
+            HR Admin: Alice Morgan
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="quickLogin('david.miller@paytrace.local', 'Employee123!')">
+            Staff: David Miller
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="quickLogin('sarah.jenkins@paytrace.local', 'Employee123!')">
+            Staff: Sarah Jenkins (Late Penalty Demo)
+          </button>
+        </div>
+      </div>
+
+      <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="login-email">Email Address</label>
+          <input type="email" id="login-email" required placeholder="name@paytrace.local" value="alice.morgan@paytrace.local">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••" value="Admin123!">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+      </form>
+
+      <div class="auth-footer">
+        <span>Academic Individual Capstone Project • 100 Marks Rubric</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application (Shown when authenticated) -->
+  <div id="app-container" class="app-container" style="display: none;">
+    <!-- Top Navigation Bar -->
+    <header class="app-header">
+      <div class="header-brand">
+        <span class="brand-logo">PT</span>
+        <span class="brand-title">PayTrace</span>
+        <span class="brand-badge">Enterprise Edition</span>
+      </div>
+
+      <div class="header-user">
+        <div class="user-pill">
+          <div class="user-avatar" id="nav-avatar">AM</div>
+          <div class="user-details">
+            <span class="user-name" id="nav-user-name">Alice Morgan</span>
+            <span class="user-role" id="nav-user-role">HR_ADMIN</span>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="handleLogout()">Sign Out</button>
+      </div>
+    </header>
+
+    <!-- App Body with Sidebar & Content -->
+    <div class="app-body">
+      <!-- Sidebar Navigation -->
+      <aside class="app-sidebar">
+        <nav class="sidebar-nav">
+          <div class="nav-section-label">OVERVIEW</div>
+          <button class="nav-item active" data-tab="tab-dashboard" onclick="switchTab('tab-dashboard')">
+            <span class="nav-icon">📊</span> Dashboard
+          </button>
+
+          <!-- HR Admin specific tabs -->
+          <div id="hr-nav-group">
+            <div class="nav-section-label">ADMINISTRATION</div>
+            <button class="nav-item" data-tab="tab-employees" onclick="switchTab('tab-employees')">
+              <span class="nav-icon">👥</span> Employees
+            </button>
+            <button class="nav-item" data-tab="tab-payroll-admin" onclick="switchTab('tab-payroll-admin')">
+              <span class="nav-icon">💰</span> Payroll Processing
+            </button>
+            <button class="nav-item" data-tab="tab-reports" onclick="switchTab('tab-reports')">
+              <span class="nav-icon">📈</span> Reports & Analytics
+            </button>
+            <button class="nav-item" data-tab="tab-audit" onclick="switchTab('tab-audit')">
+              <span class="nav-icon">🛡️</span> Audit Trail
+            </button>
+          </div>
+
+          <!-- Shared / Self-service tabs -->
+          <div class="nav-section-label">TIME & LEAVE</div>
+          <button class="nav-item" data-tab="tab-attendance" onclick="switchTab('tab-attendance')">
+            <span class="nav-icon">🕒</span> Attendance Records
+          </button>
+          <button class="nav-item" data-tab="tab-leaves" onclick="switchTab('tab-leaves')">
+            <span class="nav-icon">📅</span> Leave Management
+          </button>
+          <button class="nav-item" data-tab="tab-payslips" onclick="switchTab('tab-payslips')">
+            <span class="nav-icon">🧾</span> My Salary Slips
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="db-status">
+            <span class="status-dot"></span> MariaDB 13.0.2 Connected
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="app-content">
+
+        <!-- ============================================================= -->
+        <!-- TAB: DASHBOARD -->
+        <!-- ============================================================= -->
+        <section id="tab-dashboard" class="tab-pane active">
+          <div class="pane-header">
+            <div>
+              <h1 id="dash-greeting">Welcome back, Alice!</h1>
+              <p class="pane-subtitle" id="dash-subtitle">Here is the current operational and payroll status across the firm.</p>
+            </div>
+            <div class="pane-actions" id="dash-actions">
+              <button class="btn btn-primary" onclick="openRunPayrollModal()">⚡ Process Payroll</button>
+              <button class="btn btn-outline" onclick="openTestRollbackModal()">🧪 Test Rollback</button>
+            </div>
+          </div>
+
+          <!-- Summary Metric Cards -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-label">Active Employees</div>
+              <div class="metric-val" id="metric-emp-count">12</div>
+              <div class="metric-desc">Across 5 departments</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Monthly Gross Liability</div>
+              <div class="metric-val" id="metric-gross-outflow">$1,262,000.00</div>
+              <div class="metric-desc">Standard cycle payroll</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Pending Leave Requests</div>
+              <div class="metric-val" id="metric-pending-leaves">1</div>
+              <div class="metric-desc">Awaiting HR action</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Late Arrivals (July)</div>
+              <div class="metric-val" id="metric-late-count">19</div>
+              <div class="metric-desc">Tardy arrivals (>09:15)</div>
+            </div>
+          </div>
+
+          <!-- Dashboard Action Banner for Employees -->
+          <div id="emp-clock-in-card" class="action-card" style="display: none;">
+            <div>
+              <h3>Daily Attendance Clock-In</h3>
+              <p>Record your check-in time for today's work shift with timestamp verification.</p>
+            </div>
+            <button class="btn btn-success" onclick="handleClockIn()">🕒 Check In / Out Now</button>
+          </div>
+
+          <!-- Recent Payroll Summary Table -->
+          <div class="card mt-4">
+            <div class="card-header">
+              <h3>Recent Payroll Cycles</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table" id="dash-payroll-table">
+                <thead>
+                  <tr>
+                    <th>Period</th>
+                    <th>Dates</th>
+                    <th>Working Days</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-payroll-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- TAB: EMPLOYEES (HR ADMIN ONLY) -->
+        <!-- ============================================================= -->
+        <section id="tab-employees" class="tab-pane">
+          <div class="pane-header">
+            <div>
+              <h1>Employee Directory</h1>
+              <p class="pane-subtitle">Manage organizational personnel, roles, and baseline compensation.</p>
+            </div>
+            <div class="pane-actions">
+              <button class="btn btn-primary" onclick="openAddEmployeeModal()">+ Add New Employee</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Full Name</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                    <th>Role</th>
+                    <th>Base Pay</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="employees-table-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- TAB: PAYROLL PROCESSING (HR ADMIN ONLY) -->
+        <!-- ============================================================= -->
+        <section id="tab-payroll-admin" class="tab-pane">
+          <div class="pane-header">
+            <div>
+              <h1>Payroll Processing & Records</h1>
+              <p class="pane-subtitle">Execute monthly cycles, view frozen transaction snapshots, and generate itemized slips.</p>
+            </div>
+            <div class="pane-actions">
+              <button class="btn btn-primary" onclick="openRunPayrollModal()">Process Cycle</button>
+            </div>
+          </div>
+
+          <div class="filter-bar">
+            <label>Filter by Accounting Period:</label>
+            <select id="payroll-period-select" onchange="loadPayrollAdminTable()">
+              <option value="3">August 2026 (Period 3)</option>
+              <option value="2" selected>July 2026 (Period 2)</option>
+              <option value="1">June 2026 (Period 1)</option>
+            </select>
+          </div>
+
+          <div class="card">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Days (P / L / A)</th>
+                    <th>Gross Pay</th>
+                    <th>Deductions</th>
+                    <th>Net Salary</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="payroll-admin-table-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- TAB: REPORTS & ANALYTICS (HR ADMIN ONLY) -->
+        <!-- ============================================================= -->
+        <section id="tab-reports" class="tab-pane">
+          <div class="pane-header">
+            <div>
+              <h1>Reports & Analytics</h1>
+              <p class="pane-subtitle">Execute mandatory Phase 3 operational summaries and financial breakdowns.</p>
+            </div>
+            <div class="pane-actions">
+              <select id="report-period-select" onchange="refreshCurrentReport()">
+                <option value="2" selected>July 2026 (Period 2)</option>
+                <option value="3">August 2026 (Period 3)</option>
+                <option value="1">June 2026 (Period 1)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Report Subtabs -->
+          <div class="subtab-bar">
+            <button class="subtab-btn active" onclick="switchReport('rep-attendance')">1. Monthly Attendance Summary</button>
+            <button class="subtab-btn" onclick="switchReport('rep-late')">2. Late-Marks Report</button>
+            <button class="subtab-btn" onclick="switchReport('rep-dept')">3. Departmental Distribution</button>
+          </div>
+
+          <!-- Report 1: Attendance Summary -->
+          <div id="rep-attendance" class="report-view card active">
+            <div class="card-header">
+              <h3>Monthly Attendance & Punctuality Summary</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Working Days</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>On Leave</th>
+                    <th>Late Marks</th>
+                    <th>Attendance %</th>
+                  </tr>
+                </thead>
+                <tbody id="rep-attendance-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Report 2: Late-Marks -->
+          <div id="rep-late" class="report-view card" style="display: none;">
+            <div class="card-header">
+              <h3>Employee Late-Arrivals Report (>09:15:00)</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Work Date</th>
+                    <th>Clock-In Time</th>
+                    <th>Late Minutes</th>
+                    <th>Remarks</th>
+                  </tr>
+                </thead>
+                <tbody id="rep-late-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Report 3: Departmental Payroll -->
+          <div id="rep-dept" class="report-view card" style="display: none;">
+            <div class="card-header">
+              <h3>Departmental Payroll Outflow & Average Disbursal</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Department</th>
+                    <th>Staff Count</th>
+                    <th>Total Gross Outflow</th>
+                    <th>Total Deductions</th>
+                    <th>Net Disbursed</th>
+                    <th>Average Net Pay</th>
+                  </tr>
+                </thead>
+                <tbody id="rep-dept-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- TAB: AUDIT TRAIL (HR ADMIN ONLY) -->
+        <!-- ============================================================= -->
+        <section id="tab-audit" class="tab-pane">
+          <div class="pane-header">
+            <div>
+              <h1>Security Audit Trail</h1>
+              <p class="pane-subtitle">Immutable log recording sensitive salary modifications and payroll runs.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Log ID</th>
+                    <th>Timestamp</th>
+                    <th>Table</th>
+                    <th>Record ID</th>
+                    <th>Action</th>
+                    <th>Actor</th>
+                    <th>Captured Changes</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-table-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- TAB: ATTENDANCE (SHARED / SELF-SERVICE) -->
+        <!-- ============================================================= -->
+        <section id="tab-attendance" class="tab-pane">
+          <div class="pane-header">
+            <div>
+              <h1 id="attendance-title">Daily Attendance Logs</h1>
+              <p class="pane-subtitle">Review daily punctuality, timestamps, and leave status.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Employee</th>
+                    <th>Status</th>
+                    <th>Clock In</th>
+                    <th>Clock Out</th>
+                    <th>Punctuality</th>
+                    <th>Remarks</th>
+                  </tr>
+                </thead>
+                <tbody id="attendance-table-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- TAB: LEAVES (SHARED / SELF-SERVICE) -->
+        <!-- ============================================================= -->
+        <section id="tab-leaves" class="tab-pane">
+          <div class="pane-header">
+            <div>
+              <h1>Leave Requests & Status</h1>
+              <p class="pane-subtitle">Submit, review, and track approved and pending time off.</p>
+            </div>
+            <div class="pane-actions">
+              <button class="btn btn-primary" onclick="openApplyLeaveModal()">+ Apply for Leave</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Leave Type</th>
+                    <th>Duration</th>
+                    <th>Total Days</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Actioned By</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="leaves-table-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- TAB: MY PAYSLIPS (EMPLOYEE & HR SLIP VIEWER) -->
+        <!-- ============================================================= -->
+        <section id="tab-payslips" class="tab-pane">
+          <div class="pane-header">
+            <div>
+              <h1>Salary Slips</h1>
+              <p class="pane-subtitle">View finalized monthly pay statements with full itemized breakdowns.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Period</th>
+                    <th>Dates</th>
+                    <th>Present Days</th>
+                    <th>Gross Pay</th>
+                    <th>Total Deductions</th>
+                    <th>Net Salary</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="my-payslips-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- MODAL: ITEMIZED SALARY SLIP (PRINTABLE) -->
+  <!-- ============================================================= -->
+  <div id="slip-modal" class="modal-overlay">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h2>Itemized Salary Slip</h2>
+        <button class="modal-close" onclick="closeModal('slip-modal')">&times;</button>
+      </div>
+      <div class="modal-body" id="slip-printable-area">
+        <!-- Slip Header -->
+        <div class="payslip-header">
+          <div>
+            <h1 class="payslip-title">PAYTRACE CORPORATION</h1>
+            <p class="text-muted">100 Academic Boulevard, Suite 500 • Payroll & Tax Compliance</p>
+          </div>
+          <div class="payslip-badge" id="slip-period-badge">July 2026</div>
+        </div>
+
+        <!-- Employee Info Grid -->
+        <div class="payslip-info-grid">
+          <div><strong>Employee Name:</strong> <span id="slip-emp-name">Sarah Jenkins</span></div>
+          <div><strong>Employee ID:</strong> <span id="slip-emp-code">EMP004</span></div>
+          <div><strong>Department:</strong> <span id="slip-emp-dept">Engineering</span></div>
+          <div><strong>Designation:</strong> <span id="slip-emp-desig">Frontend Engineer</span></div>
+          <div><strong>Working Days:</strong> <span id="slip-working-days">23</span></div>
+          <div><strong>Days Present:</strong> <span id="slip-present-days">23.0</span></div>
+          <div><strong>Paid / Unpaid Leave:</strong> <span id="slip-leave-days">0 / 0</span></div>
+          <div><strong>Late Marks:</strong> <span id="slip-late-days">6</span></div>
+        </div>
+
+        <!-- Breakdown Columns -->
+        <div class="payslip-tables-grid">
+          <!-- Earnings Table -->
+          <div>
+            <h4 class="text-success">EARNINGS</h4>
+            <table class="table table-sm">
+              <thead><tr><th>Item</th><th class="text-right">Amount</th></tr></thead>
+              <tbody id="slip-earnings-body"></tbody>
+              <tfoot>
+                <tr><th>Total Gross Earnings</th><th class="text-right" id="slip-total-gross">$100,000.00</th></tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Deductions Table -->
+          <div>
+            <h4 class="text-danger">DEDUCTIONS</h4>
+            <table class="table table-sm">
+              <thead><tr><th>Item</th><th class="text-right">Amount</th></tr></thead>
+              <tbody id="slip-deductions-body"></tbody>
+              <tfoot>
+                <tr><th>Total Deductions</th><th class="text-right" id="slip-total-deductions">$20,771.75</th></tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- Net Pay Highlight -->
+        <div class="payslip-net-box">
+          <div>
+            <span class="net-label">NET TAKE-HOME SALARY</span>
+            <span class="net-words text-muted" id="slip-disbursal-note">Disbursed via Direct Bank Deposit</span>
+          </div>
+          <div class="net-amount" id="slip-net-amount">$79,228.25</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="window.print()">🖨️ Print Slip</button>
+        <button class="btn btn-primary" onclick="closeModal('slip-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- MODAL: RUN PAYROLL -->
+  <!-- ============================================================= -->
+  <div id="run-payroll-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Process Monthly Payroll Cycle</h2>
+        <button class="modal-close" onclick="closeModal('run-payroll-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Execute transaction-safe procedural calculation for an individual employee or bulk calculate the entire firm:</p>
+        <div class="form-group">
+          <label for="run-period-id">Payroll Period</label>
+          <select id="run-period-id">
+            <option value="3">August 2026</option>
+            <option value="2">July 2026</option>
+            <option value="1">June 2026</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="run-employee-id">Scope</label>
+          <select id="run-employee-id">
+            <option value="">All Active Employees (Bulk Process)</option>
+            <!-- Populated via JS -->
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('run-payroll-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitRunPayroll()">⚡ Execute Calculation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- MODAL: TEST ROLLBACK DEMO -->
+  <!-- ============================================================= -->
+  <div id="test-rollback-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Transaction Safety & Rollback Verification</h2>
+        <button class="modal-close" onclick="closeModal('test-rollback-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>This academic test executes stored procedure <code>sp_demonstrate_transaction_rollback</code>. It attempts an operation with negative gross earnings that deliberately triggers a <code>chk_payroll_gross</code> constraint failure, invokes the <code>SQLEXCEPTION</code> rollback handler, and verifies that zero rows are persisted.</p>
+        <div id="rollback-result-box" class="callout" style="display: none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('test-rollback-modal')">Close</button>
+        <button class="btn btn-danger" onclick="executeRollbackTest()">Run Rollback Demo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- MODAL: APPLY FOR LEAVE -->
+  <!-- ============================================================= -->
+  <div id="apply-leave-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Submit Leave Application</h2>
+        <button class="modal-close" onclick="closeModal('apply-leave-modal')">&times;</button>
+      </div>
+      <form onsubmit="submitApplyLeave(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="leave-type">Leave Type</label>
+            <select id="leave-type" required>
+              <option value="CASUAL">Casual Leave</option>
+              <option value="SICK">Sick Leave</option>
+              <option value="PAID">Paid Leave</option>
+              <option value="UNPAID">Unpaid Leave</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="leave-start">Start Date</label>
+              <input type="date" id="leave-start" required onchange="calcLeaveDays()">
+            </div>
+            <div class="form-group">
+              <label for="leave-end">End Date</label>
+              <input type="date" id="leave-end" required onchange="calcLeaveDays()">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="leave-days">Total Days</label>
+            <input type="number" id="leave-days" step="0.5" min="0.5" required value="1">
+          </div>
+          <div class="form-group">
+            <label for="leave-reason">Reason</label>
+            <textarea id="leave-reason" rows="3" required placeholder="Describe reason for leave..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('apply-leave-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Application</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- MODAL: ADD EMPLOYEE -->
+  <!-- ============================================================= -->
+  <div id="add-employee-modal" class="modal-overlay">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h2>Add New Employee</h2>
+        <button class="modal-close" onclick="closeModal('add-employee-modal')">&times;</button>
+      </div>
+      <form onsubmit="submitAddEmployee(event)">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="new-code">Employee Code</label>
+              <input type="text" id="new-code" required placeholder="EMP013">
+            </div>
+            <div class="form-group">
+              <label for="new-dept">Department</label>
+              <select id="new-dept" required>
+                <option value="1">Engineering</option>
+                <option value="2">Human Resources</option>
+                <option value="3">Finance & Accounting</option>
+                <option value="4">Marketing & Sales</option>
+                <option value="5">Operations & Support</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="new-first">First Name</label>
+              <input type="text" id="new-first" required placeholder="Jane">
+            </div>
+            <div class="form-group">
+              <label for="new-last">Last Name</label>
+              <input type="text" id="new-last" required placeholder="Doe">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="new-email">Work Email</label>
+              <input type="email" id="new-email" required placeholder="jane.doe@paytrace.local">
+            </div>
+            <div class="form-group">
+              <label for="new-desig">Designation</label>
+              <input type="text" id="new-desig" required placeholder="Software Engineer">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="new-role">Role</label>
+              <select id="new-role" required>
+                <option value="EMPLOYEE">Employee (Self-Service)</option>
+                <option value="HR_ADMIN">HR / Admin</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="new-hire">Hire Date</label>
+              <input type="date" id="new-hire" required value="2026-09-01">
+            </div>
+          </div>
+          <h4 class="mt-3">Compensation Configuration (Monthly)</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="new-basic">Basic Salary ($)</label>
+              <input type="number" id="new-basic" step="0.01" min="0" required placeholder="60000.00">
+            </div>
+            <div class="form-group">
+              <label for="new-hra">HRA ($)</label>
+              <input type="number" id="new-hra" step="0.01" min="0" value="24000.00">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="new-spec">Special Allowance ($)</label>
+              <input type="number" id="new-spec" step="0.01" min="0" value="10000.00">
+            </div>
+            <div class="form-group">
+              <label for="new-pf">Provident Fund ($)</label>
+              <input type="number" id="new-pf" step="0.01" min="0" value="7200.00">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('add-employee-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Employee</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
