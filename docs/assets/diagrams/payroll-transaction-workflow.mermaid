@@ -1,0 +1,67 @@
+flowchart TD
+    Start(["START: POST /api/payroll/process<br/>{ periodId, employeeId? }"]) --> AuthGate{"authenticateToken &<br/>requireRole('HR_ADMIN')?"}
+    
+    AuthGate -- "Unauthorized (401/403)" --> AuthErr["HTTP 401 / 403 Forbidden"]
+    AuthGate -- "Authorized" --> SPCall["Express Invokes Stored Procedure:<br/>CALL sp_calculate_payroll()"]
+
+    subgraph Phase1["Phase 1: Pre-Transaction Validation & Guard Clauses"]
+        G1{"1. Employee active?<br/>status = 'ACTIVE'"}
+        G2{"2. Period exists?<br/>period_id found"}
+        G3{"3. Duplicate check?<br/>(emp, period) in payrolls"}
+        G4{"4. Active salary structure?<br/>is_active = TRUE"}
+
+        E1["Exit 404: Employee not found or inactive"]
+        E2["Exit 404: Payroll period does not exist"]
+        E3["Exit 409 Conflict: Duplicate run prevented"]
+        E4["Exit 422 Unprocessable: No active salary found"]
+    end
+
+    SPCall --> G1
+    G1 -- "Fail" --> E1
+    G1 -- "Pass" --> G2
+    G2 -- "Fail" --> E2
+    G2 -- "Pass" --> G3
+    G3 -- "Exists" --> E3
+    G3 -- "Pass" --> G4
+    G4 -- "Missing" --> E4
+
+    subgraph Phase2["Phase 2: Operational Metrics Aggregation"]
+        M1["Query attendance: present_days, late_days"]
+        M2["Query leaves: paid_leave_days, unpaid_leave_days"]
+        M3["Integrate ABSENT marks: unpaid_leave_days += absent_marks"]
+        M1 --> M2 --> M3
+    end
+
+    G4 -- "Pass" --> M1
+
+    subgraph Phase3["Phase 3: Financial Calculations & Formulas"]
+        C1["gross_earnings = basic_salary + hra + special_allowance"]
+        C2["fn_calculate_daily_rate(gross_earnings, working_days)<br/>daily_rate = ROUND(gross / working_days, 2)"]
+        C3["Deductions: unpaid_deduction = unpaid_days * daily_rate<br/>late_penalty = (late_days > 3) ? (late_days - 3) * 0.5 * daily_rate : 0"]
+        C4["fn_calculate_monthly_tds(gross_earnings * 12.0)<br/>Progressive 4-Slab Calculation: 0% / 5% / 10% / 20%"]
+        C5["net_salary = MAX(0.00, gross_earnings - total_deductions)"]
+        C1 --> C2 --> C3 --> C4 --> C5
+    end
+
+    M3 --> C1
+
+    subgraph Phase4["Phase 4: ACID Transaction Boundary (InnoDB Engine)"]
+        TX_START["START TRANSACTION;"]
+        TX_MASTER["Step 4A: INSERT INTO payrolls<br/>• Master Snapshot Metrics & Net Salary<br/>• Trigger trg_payrolls_after_insert logs to audit_logs<br/>• Capture LAST_INSERT_ID() -> p_payroll_id"]
+        TX_ITEMS["Step 4B: INSERT INTO payroll_items<br/>• Normalized Earnings: Basic, HRA, Special<br/>• Normalized Deductions: PF, PT, Unpaid, Late, TDS"]
+        TX_VERIFY{"Engine Integrity Verification:<br/>• chk_payroll_gross (gross >= 0)<br/>• chk_payroll_net (net >= 0)<br/>• chk_payroll_item_amount (amount >= 0)<br/>• Foreign Keys Valid?"}
+        TX_COMMIT["COMMIT;<br/>Atomic Persistence to Disk"]
+        TX_ROLLBACK["ROLLBACK;<br/>DECLARE EXIT HANDLER FOR SQLEXCEPTION<br/>Zero Orphaned Rows"]
+
+        TX_START --> TX_MASTER --> TX_ITEMS --> TX_VERIFY
+        TX_VERIFY -- "Valid & Clean" --> TX_COMMIT
+        TX_VERIFY -- "Constraint Violation / Error" --> TX_ROLLBACK
+    end
+
+    C5 --> TX_START
+
+    Success(["SUCCESS: HTTP 200 OK<br/>p_status_code = 200<br/>Returns { payroll_id, net_salary }"])
+    Failure(["FAILURE: HTTP 500 / 400<br/>p_status_code = 500<br/>Returns { success: false, error }"])
+
+    TX_COMMIT --> Success
+    TX_ROLLBACK --> Failure

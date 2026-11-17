@@ -40,6 +40,14 @@ Phase 2 implements the approved Phase 1 relational schema through procedural dat
 
 ## 4. Stored Procedures & Transaction Management
 
+### Procedural Lifecycle Diagram
+
+![Payroll Calculation & Transaction Lifecycle](../assets/diagrams/payroll-transaction-workflow.svg)
+
+*High-resolution downloads:* [[Vector SVG Format]](../assets/diagrams/payroll-transaction-workflow.svg) • [[High-DPI PNG Format (3397 × 6372 px)]](../assets/diagrams/payroll-transaction-workflow.png) • [[Graphviz DOT Source]](../assets/diagrams/payroll-transaction-workflow.dot) • [[Mermaid Source]](../assets/diagrams/payroll-transaction-workflow.mermaid)
+
+---
+
 ### 4.1 `sp_calculate_payroll`
 - **Signature:** `(IN p_employee_id, IN p_period_id, IN p_processed_by, OUT p_payroll_id, OUT p_net_salary, OUT p_status_code, OUT p_status_message)`
 - **Execution Flow:**

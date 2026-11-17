@@ -149,6 +149,44 @@ The login screen features one-click demo role buttons:
 
 ---
 
+## Visual Interface & Architecture Deliverables
+
+### System Architecture
+![PayTrace 3-Tier Enterprise System Architecture](docs/assets/diagrams/system-architecture.svg)
+
+*Technical Diagram Downloads:*
+- **Entity-Relationship Model:** [[Vector SVG](docs/assets/diagrams/er-diagram.svg)] • [[High-DPI PNG (4948 × 3657 px)](docs/assets/diagrams/er-diagram.png)] • [[Graphviz DOT](docs/assets/diagrams/er-diagram.dot)] • [[Mermaid](docs/assets/diagrams/er-diagram.mermaid)]
+- **System Architecture:** [[Vector SVG](docs/assets/diagrams/system-architecture.svg)] • [[High-DPI PNG (3927 × 3218 px)](docs/assets/diagrams/system-architecture.png)] • [[Graphviz DOT](docs/assets/diagrams/system-architecture.dot)] • [[Mermaid](docs/assets/diagrams/system-architecture.mermaid)]
+- **Payroll & Transaction Workflow:** [[Vector SVG](docs/assets/diagrams/payroll-transaction-workflow.svg)] • [[High-DPI PNG (3397 × 6372 px)](docs/assets/diagrams/payroll-transaction-workflow.png)] • [[Graphviz DOT](docs/assets/diagrams/payroll-transaction-workflow.dot)] • [[Mermaid](docs/assets/diagrams/payroll-transaction-workflow.mermaid)]
+
+### Core UI Gallery
+| View | Description | Screenshot Preview |
+| :--- | :--- | :--- |
+| **HR / Admin Dashboard** | Real-time aggregate metrics, liability tracking, and cycle management | ![HR Dashboard](docs/assets/screenshots/02-hr-dashboard.png) |
+| **Itemized Salary Slip** | Sarah Jenkins July 2026 slip with 6 late marks and $6,521.75 penalty | ![Itemized Payslip](docs/assets/screenshots/08-itemized-salary-slip.png) |
+| **RBAC Security Enforcement** | Direct object access / tampering blocked with HTTP 403 alert | ![RBAC 403 Forbidden](docs/assets/screenshots/11-access-denied-behavior.png) |
+
+<details>
+<summary><strong>Click to expand the complete 11-screen UI capture index</strong></summary>
+
+| # | Screen Name | Path | Description |
+|---|---|---|---|
+| 01 | Login Screen | [`01-login.png`](docs/assets/screenshots/01-login.png) | Authentication portal with 1-click evaluation shortcuts |
+| 02 | HR Dashboard | [`02-hr-dashboard.png`](docs/assets/screenshots/02-hr-dashboard.png) | High-level organizational KPI metrics and quick actions |
+| 03 | Employee Dashboard | [`03-employee-dashboard.png`](docs/assets/screenshots/03-employee-dashboard.png) | Self-service compensation overview and punch clock |
+| 04 | Employee Roster | [`04-employee-roster.png`](docs/assets/screenshots/04-employee-roster.png) | 12-employee directory across 5 departments |
+| 05 | Attendance Log | [`05-attendance-management.png`](docs/assets/screenshots/05-attendance-management.png) | August 2026 daily check-in log and punctuality badges |
+| 06 | Leave Workflow | [`06-leave-workflow.png`](docs/assets/screenshots/06-leave-workflow.png) | Leave application modal and HR approval/rejection queue |
+| 07 | Payroll Cycle | [`07-payroll-processing.png`](docs/assets/screenshots/07-payroll-processing.png) | July 2026 cycle calculation and status monitoring |
+| 08 | Itemized Salary Slip | [`08-itemized-salary-slip.png`](docs/assets/screenshots/08-itemized-salary-slip.png) | Itemized earnings, statutory deductions, and net pay voucher |
+| 09 | Attendance Report | [`09-monthly-attendance-report.png`](docs/assets/screenshots/09-monthly-attendance-report.png) | Phase 3 monthly attendance analytical summary |
+| 10 | Late-Marks Report | [`10-late-marks-report.png`](docs/assets/screenshots/10-late-marks-report.png) | Phase 3 analytical ranking of tardy arrivals (>09:15) |
+| 11 | Access Denied | [`11-access-denied-behavior.png`](docs/assets/screenshots/11-access-denied-behavior.png) | Client & server RBAC 403 Forbidden protection against snooping |
+
+</details>
+
+---
+
 ## Evaluation Evidence Highlights
 
 - **Normalization Proof:** Documented in [normalization.md](docs/phase-1/normalization.md) (All relations satisfy 3NF & BCNF).

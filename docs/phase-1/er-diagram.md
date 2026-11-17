@@ -4,6 +4,16 @@
 
 The PayTrace relational database model consists of 9 normalized entities designed for transparency, strict data integrity, auditability, and role-based access control.
 
+### Visual ER Diagram Deliverable
+
+![PayTrace Relational ER Diagram](../assets/diagrams/er-diagram.svg)
+
+*High-resolution downloads:* [[Vector SVG Format]](../assets/diagrams/er-diagram.svg) • [[High-DPI PNG Format (4948 × 3657 px)]](../assets/diagrams/er-diagram.png) • [[Graphviz DOT Source]](../assets/diagrams/er-diagram.dot) • [[Mermaid Source]](../assets/diagrams/er-diagram.mermaid)
+
+---
+
+### Mermaid Specification
+
 ```mermaid
 erDiagram
     DEPARTMENTS ||--o{ EMPLOYEES : "employs"

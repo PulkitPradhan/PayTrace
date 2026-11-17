@@ -1,0 +1,130 @@
+erDiagram
+    DEPARTMENTS ||--o{ EMPLOYEES : "employs (ON DELETE RESTRICT)"
+    EMPLOYEES ||--o{ SALARY_STRUCTURES : "has (ON DELETE CASCADE)"
+    EMPLOYEES ||--o{ ATTENDANCE : "logs (ON DELETE CASCADE)"
+    EMPLOYEES ||--o{ LEAVES : "submits (ON DELETE CASCADE)"
+    EMPLOYEES ||--o{ LEAVES : "actions [approver] (ON DELETE SET NULL)"
+    EMPLOYEES ||--o{ PAYROLLS : "receives (ON DELETE RESTRICT)"
+    EMPLOYEES ||--o{ PAYROLLS : "processes [HR admin] (ON DELETE RESTRICT)"
+    PAYROLL_PERIODS ||--o{ PAYROLLS : "contains (ON DELETE RESTRICT)"
+    SALARY_STRUCTURES ||--o{ PAYROLLS : "snapshot_referenced_in (ON DELETE RESTRICT)"
+    PAYROLLS ||--|{ PAYROLL_ITEMS : "breaks_down_into (ON DELETE CASCADE)"
+    EMPLOYEES ||--o{ AUDIT_LOGS : "triggers [actor] (ON DELETE SET NULL)"
+
+    DEPARTMENTS {
+        int department_id PK "INT AUTO_INCREMENT"
+        varchar department_name UK "VARCHAR(50) NOT NULL"
+        varchar description "VARCHAR(255) NULL"
+        timestamp created_at "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    EMPLOYEES {
+        int employee_id PK "INT AUTO_INCREMENT"
+        varchar employee_code UK "VARCHAR(20) NOT NULL"
+        varchar first_name "VARCHAR(50) NOT NULL"
+        varchar last_name "VARCHAR(50) NOT NULL"
+        varchar email UK "VARCHAR(100) NOT NULL"
+        varchar phone "VARCHAR(20) NULL"
+        int department_id FK "INT NOT NULL -> departments"
+        varchar designation "VARCHAR(50) NOT NULL"
+        enum role "ENUM('HR_ADMIN','EMPLOYEE')"
+        varchar password_hash "VARCHAR(255) NOT NULL"
+        date hire_date "DATE NOT NULL"
+        enum status "ENUM('ACTIVE','INACTIVE','TERMINATED')"
+        timestamp created_at "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        timestamp updated_at "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE"
+    }
+
+    SALARY_STRUCTURES {
+        int salary_id PK "INT AUTO_INCREMENT"
+        int employee_id FK "INT NOT NULL -> employees"
+        decimal basic_salary "DECIMAL(10,2) CHECK >= 0"
+        decimal hra "DECIMAL(10,2) CHECK >= 0"
+        decimal special_allowance "DECIMAL(10,2) CHECK >= 0"
+        decimal provident_fund "DECIMAL(10,2) CHECK >= 0"
+        decimal professional_tax "DECIMAL(10,2) CHECK >= 0"
+        date effective_date "DATE NOT NULL"
+        boolean is_active "BOOLEAN DEFAULT TRUE"
+        timestamp created_at "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        timestamp updated_at "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE"
+    }
+
+    ATTENDANCE {
+        int attendance_id PK "INT AUTO_INCREMENT"
+        int employee_id FK "INT NOT NULL -> employees [UK 1/2]"
+        date work_date UK "DATE NOT NULL [UK 2/2]"
+        enum status "ENUM('PRESENT','ABSENT','HALF_DAY','ON_LEAVE')"
+        time check_in_time "TIME NULL"
+        time check_out_time "TIME NULL"
+        boolean is_late "BOOLEAN DEFAULT FALSE"
+        int late_minutes "INT DEFAULT 0 CHECK >= 0"
+        varchar remarks "VARCHAR(255) NULL"
+        timestamp created_at "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        timestamp updated_at "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE"
+    }
+
+    LEAVES {
+        int leave_id PK "INT AUTO_INCREMENT"
+        int employee_id FK "INT NOT NULL -> employees (Applicant)"
+        enum leave_type "ENUM('CASUAL','SICK','PAID','UNPAID')"
+        date start_date "DATE NOT NULL CHECK <= end_date"
+        date end_date "DATE NOT NULL"
+        decimal total_days "DECIMAL(4,1) CHECK > 0"
+        varchar reason "VARCHAR(255) NOT NULL"
+        enum status "ENUM('PENDING','APPROVED','REJECTED','CANCELLED')"
+        timestamp applied_on "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        int actioned_by FK "INT NULL -> employees (Approver)"
+        timestamp actioned_on "TIMESTAMP NULL"
+        varchar admin_remarks "VARCHAR(255) NULL"
+    }
+
+    PAYROLL_PERIODS {
+        int period_id PK "INT AUTO_INCREMENT"
+        varchar period_name UK "VARCHAR(30) NOT NULL"
+        date start_date "DATE NOT NULL CHECK <= end_date"
+        date end_date "DATE NOT NULL"
+        int total_working_days "INT NOT NULL CHECK > 0"
+        enum status "ENUM('OPEN','PROCESSING','FINALIZED','CLOSED')"
+        timestamp created_at "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    PAYROLLS {
+        int payroll_id PK "INT AUTO_INCREMENT"
+        int employee_id FK "INT NOT NULL -> employees [UK 1/2]"
+        int period_id FK "INT NOT NULL -> payroll_periods [UK 2/2]"
+        int salary_id FK "INT NOT NULL -> salary_structures"
+        decimal present_days "DECIMAL(4,1) DEFAULT 0.0 CHECK >= 0"
+        decimal approved_paid_leave_days "DECIMAL(4,1) DEFAULT 0.0"
+        decimal unpaid_leave_days "DECIMAL(4,1) DEFAULT 0.0 CHECK >= 0"
+        int late_days "INT DEFAULT 0 CHECK >= 0"
+        decimal gross_earnings "DECIMAL(10,2) NOT NULL CHECK >= 0"
+        decimal total_deductions "DECIMAL(10,2) NOT NULL CHECK >= 0"
+        decimal net_salary "DECIMAL(10,2) NOT NULL CHECK >= 0"
+        enum payment_status "ENUM('CALCULATED','PROCESSED','PAID')"
+        int processed_by FK "INT NOT NULL -> employees (HR Admin)"
+        timestamp processed_at "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        date payment_date "DATE NULL"
+        varchar remarks "VARCHAR(255) NULL"
+    }
+
+    PAYROLL_ITEMS {
+        int item_id PK "INT AUTO_INCREMENT"
+        int payroll_id FK "INT NOT NULL -> payrolls"
+        enum item_type "ENUM('EARNING','DEDUCTION')"
+        varchar item_name "VARCHAR(50) NOT NULL"
+        decimal amount "DECIMAL(10,2) NOT NULL CHECK >= 0"
+        varchar description "VARCHAR(255) NULL"
+        timestamp created_at "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    AUDIT_LOGS {
+        int log_id PK "INT AUTO_INCREMENT"
+        varchar table_name "VARCHAR(50) NOT NULL"
+        int record_id "INT NOT NULL"
+        enum action "ENUM('INSERT','UPDATE','DELETE')"
+        int actor_employee_id FK "INT NULL -> employees"
+        longtext old_values "LONGTEXT JSON NULL"
+        longtext new_values "LONGTEXT JSON NULL"
+        varchar ip_address "VARCHAR(45) NULL"
+        timestamp created_at "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+    }

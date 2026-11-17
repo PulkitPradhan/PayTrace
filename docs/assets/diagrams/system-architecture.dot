@@ -1,0 +1,164 @@
+digraph PayTrace_Architecture {
+    graph [
+        rankdir=TB,
+        bgcolor="#FFFFFF",
+        pad="0.5",
+        nodesep="0.6",
+        ranksep="0.85",
+        fontname="Helvetica, Arial, sans-serif",
+        fontsize="16",
+        splines=spline
+    ];
+    node [
+        shape=none,
+        fontname="Helvetica, Arial, sans-serif"
+    ];
+    edge [
+        fontname="Helvetica, Arial, sans-serif",
+        fontsize="9",
+        color="#334155",
+        penwidth=1.5
+    ];
+
+    // Header Title
+    labelloc="t";
+    label=<<table border="0" cellborder="0" cellspacing="0" cellpadding="4">
+        <tr><td align="center"><font point-size="20" color="#0F172A"><b>PayTrace — Technical System Architecture</b></font></td></tr>
+        <tr><td align="center"><font point-size="11" color="#475569">Modular 3-Tier Enterprise Architecture &bull; RBAC Security &bull; Procedural Business Logic &bull; ACID Transactions</font></td></tr>
+    </table>>;
+
+    // LAYER 1: CLIENT TIER (SPA)
+    client_tier [label=<
+        <table border="1" cellborder="0" cellspacing="0" cellpadding="6" bgcolor="#F8FAFC" color="#CBD5E1">
+            <tr><td bgcolor="#0284C7" colspan="2" align="center"><font color="#FFFFFF" point-size="13"><b>PRESENTATION LAYER &bull; SINGLE PAGE APPLICATION (SPA)</b></font></td></tr>
+            <tr bgcolor="#E0F2FE"><td colspan="2" align="center"><font color="#0369A1" point-size="9">Vanilla HTML5 / Responsive CSS3 (Custom Properties) / ES6 Modules &bull; Port: 3000</font></td></tr>
+            <tr>
+                <td width="380" valign="top" bgcolor="#FFFFFF">
+                    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#F0F9FF" color="#BAE6FD">
+                        <tr><td bgcolor="#0284C7" align="center"><font color="#FFFFFF" point-size="10"><b>HR / Admin Portal (role: HR_ADMIN)</b></font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Executive Dashboard:</b> 4 Headcount &amp; Liability KPIs, Quick Action Triggers</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Employee Directory:</b> Roster CRUD &amp; Salary Structure Assignment Modal</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Attendance Monitor:</b> Departmental calendar filter &amp; tardy check-in review</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Leave Approval Hub:</b> Request queue, approve/reject workflow &amp; admin remarks</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Payroll Operations:</b> Procedural calculation execution (Single &amp; Bulk cycle)</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Transaction Rollback Tester:</b> Intentional constraint violation demonstration</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Analytical Reports:</b> Monthly attendance, tardiness, departmental summary</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Audit Trail Viewer:</b> Immutable historical mutation inspection with JSON diffs</font></td></tr>
+                    </table>
+                </td>
+                <td width="380" valign="top" bgcolor="#FFFFFF">
+                    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#F0FDF4" color="#BBF7D0">
+                        <tr><td bgcolor="#059669" align="center"><font color="#FFFFFF" point-size="10"><b>Employee Self-Service Portal (role: EMPLOYEE)</b></font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Personal Dashboard:</b> Active compensation summary &amp; quick shift status</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Web Punch Clock:</b> Daily check-in/out with automated late arrival evaluation</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Leave Application:</b> Leave requests with client-side boundary validation</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Itemized Salary Slips:</b> Frozen master snapshot &amp; normalized line-item modal</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Print / PDF Export:</b> CSS print stylesheets for clean salary slip vouchers</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>IDOR Self-Isolation:</b> Hardened boundaries preventing peer record access</font></td></tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    >];
+
+    // LAYER 2: APPLICATION & SECURITY (Node.js / Express.js)
+    backend_tier [label=<
+        <table border="1" cellborder="0" cellspacing="0" cellpadding="6" bgcolor="#F8FAFC" color="#CBD5E1">
+            <tr><td bgcolor="#1E40AF" colspan="3" align="center"><font color="#FFFFFF" point-size="13"><b>APPLICATION &amp; SECURITY LAYER &bull; Node.js v26+ / Express.js 5+</b></font></td></tr>
+            <tr bgcolor="#DBEAFE"><td colspan="3" align="center"><font color="#1E40AF" point-size="9">REST API Server (src/server.js, src/app.js) &bull; Stateless JWT Authentication &bull; Role-Based Access Control</font></td></tr>
+            <tr>
+                <td width="240" valign="top" bgcolor="#FFFFFF">
+                    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#FFFBEB" color="#FDE68A">
+                        <tr><td bgcolor="#D97706" align="center"><font color="#FFFFFF" point-size="10"><b>Security &amp; Auth Pipeline</b></font></td></tr>
+                        <tr><td align="left"><font color="#0F172A"><b>authenticateToken:</b></font><br/><font color="#64748B" point-size="8">Verifies Bearer JWT signature via JWT_SECRET; validates active DB employee status</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A"><b>requireRole('HR_ADMIN'):</b></font><br/><font color="#64748B" point-size="8">Restricts administrative endpoints (strict 403 Forbidden gatekeeper)</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A"><b>enforceSelfOrAdmin:</b></font><br/><font color="#64748B" point-size="8">Anti-tampering / IDOR defense: ensures regular staff access strictly their own data</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A"><b>bcryptjs Encryption:</b></font><br/><font color="#64748B" point-size="8">10-round salted password hashing</font></td></tr>
+                    </table>
+                </td>
+                <td width="280" valign="top" bgcolor="#FFFFFF">
+                    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#EEF2FF" color="#C7D2FE">
+                        <tr><td bgcolor="#4F46E5" align="center"><font color="#FFFFFF" point-size="10"><b>Modular REST API Routers (/api/*)</b></font></td></tr>
+                        <tr><td align="left"><font color="#4F46E5"><b>/api/auth</b></font> <font color="#64748B" point-size="8">&rarr; Login, Session Verify (/me), Logout</font></td></tr>
+                        <tr><td align="left"><font color="#4F46E5"><b>/api/employees</b></font> <font color="#64748B" point-size="8">&rarr; Directory, Profiles, Staff Onboarding</font></td></tr>
+                        <tr><td align="left"><font color="#4F46E5"><b>/api/salary</b></font> <font color="#64748B" point-size="8">&rarr; Salary configuration &amp; revisions</font></td></tr>
+                        <tr><td align="left"><font color="#4F46E5"><b>/api/attendance</b></font> <font color="#64748B" point-size="8">&rarr; Daily punch clock, period queries</font></td></tr>
+                        <tr><td align="left"><font color="#4F46E5"><b>/api/leaves</b></font> <font color="#64748B" point-size="8">&rarr; Leave submissions &amp; admin approvals</font></td></tr>
+                        <tr><td align="left"><font color="#4F46E5"><b>/api/payroll</b></font> <font color="#64748B" point-size="8">&rarr; Cycles, Slips, /process, /test-rollback</font></td></tr>
+                        <tr><td align="left"><font color="#4F46E5"><b>/api/reports</b></font> <font color="#64748B" point-size="8">&rarr; Analytical reporting queries 1&ndash;4</font></td></tr>
+                        <tr><td align="left"><font color="#4F46E5"><b>/api/audit-logs</b></font> <font color="#64748B" point-size="8">&rarr; Immutable system audit trail</font></td></tr>
+                    </table>
+                </td>
+                <td width="240" valign="top" bgcolor="#FFFFFF">
+                    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#F8FAFC" color="#E2E8F0">
+                        <tr><td bgcolor="#475569" align="center"><font color="#FFFFFF" point-size="10"><b>Infrastructure &amp; Pool</b></font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>mysql2 / promise:</b><br/><font color="#64748B" point-size="8">Connection pool, keepAlive: true, multipleStatements: true for CALL sp_*</font></font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>CORS &amp; Cookie-Parser:</b><br/><font color="#64748B" point-size="8">Secure credential transport</font></font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Morgan Logging:</b><br/><font color="#64748B" point-size="8">HTTP access observability</font></font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>Health Probe:</b><br/><font color="#64748B" point-size="8">GET /api/health</font></font></td></tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    >];
+
+    // LAYER 3: DATA PERSISTENCE & ENGINE (MariaDB / InnoDB)
+    database_tier [label=<
+        <table border="1" cellborder="0" cellspacing="0" cellpadding="6" bgcolor="#F8FAFC" color="#CBD5E1">
+            <tr><td bgcolor="#0F172A" colspan="3" align="center"><font color="#FFFFFF" point-size="13"><b>DATA &amp; BUSINESS LOGIC LAYER &bull; MariaDB 13.0+ (InnoDB Storage Engine)</b></font></td></tr>
+            <tr bgcolor="#F1F5F9"><td colspan="3" align="center"><font color="#475569" point-size="9">Strict ACID Guarantees &bull; Procedural Business Logic &bull; Composite Indexes &bull; Declarative Triggers</font></td></tr>
+            <tr>
+                <td width="260" valign="top" bgcolor="#FFFFFF">
+                    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#FEF2F2" color="#FECACA">
+                        <tr><td bgcolor="#DC2626" align="center"><font color="#FFFFFF" point-size="10"><b>Stored Procedures &amp; Functions</b></font></td></tr>
+                        <tr><td align="left"><font color="#DC2626"><b>sp_calculate_payroll:</b></font><br/><font color="#64748B" point-size="8">Atomic transaction, pro-rata gross, tax, unpaid leave, late penalties, inserts master &amp; items. Handled by EXIT HANDLER FOR SQLEXCEPTION with ROLLBACK.</font></td></tr>
+                        <tr><td align="left"><font color="#DC2626"><b>sp_process_bulk_payroll:</b></font><br/><font color="#64748B" point-size="8">Cursor-driven batch processing across active staff with processed/error counters.</font></td></tr>
+                        <tr><td align="left"><font color="#DC2626"><b>sp_demonstrate_transaction_rollback:</b></font><br/><font color="#64748B" point-size="8">Simulates constraint violation, verifies safe ROLLBACK with zero orphaned rows.</font></td></tr>
+                        <tr><td align="left"><font color="#059669"><b>fn_calculate_daily_rate:</b></font><br/><font color="#64748B" point-size="8">Deterministic pro-rata compensation formula.</font></td></tr>
+                        <tr><td align="left"><font color="#059669"><b>fn_calculate_monthly_tds:</b></font><br/><font color="#64748B" point-size="8">Progressive 4-tier income tax deduction.</font></td></tr>
+                    </table>
+                </td>
+                <td width="260" valign="top" bgcolor="#FFFFFF">
+                    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#FEFCE8" color="#FEF08A">
+                        <tr><td bgcolor="#CA8A04" align="center"><font color="#FFFFFF" point-size="10"><b>Triggers &amp; Optimizations</b></font></td></tr>
+                        <tr><td align="left"><font color="#854D0E"><b>trg_attendance_before_*:</b></font><br/><font color="#64748B" point-size="8">Check-out &gt; check-in validation; leave conflict rejection; late flag &amp; minutes calculation (&gt;09:15).</font></td></tr>
+                        <tr><td align="left"><font color="#854D0E"><b>trg_leaves_before_*:</b></font><br/><font color="#64748B" point-size="8">Boundary checking (start &le; end); overlap rejection for approved records.</font></td></tr>
+                        <tr><td align="left"><font color="#854D0E"><b>trg_salary_after_update:</b></font><br/><font color="#64748B" point-size="8">JSON diff snapshot inserted to audit_logs.</font></td></tr>
+                        <tr><td align="left"><font color="#854D0E"><b>trg_payrolls_after_insert:</b></font><br/><font color="#64748B" point-size="8">Immutable snapshot logging on disbursement.</font></td></tr>
+                        <tr><td align="left"><font color="#2563EB"><b>Composite Indexes:</b></font><br/><font color="#64748B" point-size="8">idx_attendance_late_lookup, idx_attendance_period_summary, idx_payrolls_period_employee, idx_leaves_emp_status_dates.</font></td></tr>
+                    </table>
+                </td>
+                <td width="240" valign="top" bgcolor="#FFFFFF">
+                    <table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#F8FAFC" color="#E2E8F0">
+                        <tr><td bgcolor="#334155" align="center"><font color="#FFFFFF" point-size="10"><b>Entities &amp; Reporting Views</b></font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>departments</b> (Organizational units)</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>employees</b> (Directory &amp; RBAC roles)</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>salary_structures</b> (Effective date)</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>attendance</b> (Daily time tracking)</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>leaves</b> (Applications &amp; Approvals)</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>payroll_periods</b> (Monthly cycles)</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>payrolls</b> (Master salary snapshot)</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>payroll_items</b> (Normalized line items)</font></td></tr>
+                        <tr><td align="left"><font color="#0F172A">&bull; <b>audit_logs</b> (Immutable audit trail)</font></td></tr>
+                        <tr><td align="left"><font color="#0284C7">&bull; <b>Analytical Reports 1&ndash;4 Queries</b></font></td></tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    >];
+
+    // Inter-Tier Edges
+    client_tier -> backend_tier [
+        label="  HTTP/1.1 REST Requests (JSON) &bull; Bearer JWT / Cookie  \n  Responses (JSON data & HTTP 200/400/403/404/409/500)  ",
+        color="#0284C7",
+        fontcolor="#0369A1",
+        penwidth=2.0
+    ];
+
+    backend_tier -> database_tier [
+        label="  Connection Pool (mysql2/promise)  \n  SQL DML, Transaction Control & CALL sp_*()  ",
+        color="#1E40AF",
+        fontcolor="#1E40AF",
+        penwidth=2.0
+    ];
+}
