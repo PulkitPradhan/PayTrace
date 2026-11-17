@@ -19,7 +19,14 @@ router.get('/periods', async (req, res) => {
 router.get('/', async (req, res) => {
   let { employeeId, periodId } = req.query;
 
+  // Enforce self-access for employees; reject attempts to query other employees
   if (req.user.role !== 'HR_ADMIN') {
+    if (employeeId && parseInt(employeeId, 10) !== req.user.employee_id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied: Employees can access only their own authorized records.'
+      });
+    }
     employeeId = req.user.employee_id;
   }
 

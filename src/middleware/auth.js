@@ -1,7 +1,10 @@
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_paytrace_academic_jwt_key_2026_secure';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('FATAL SECURITY ERROR: JWT_SECRET environment variable is not defined.');
+}
 
 async function authenticateToken(req, res, next) {
   let token = null;

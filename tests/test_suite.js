@@ -7,6 +7,7 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+const { authenticateToken, requireRole, enforceSelfOrAdmin } = require('../src/middleware/auth');
 
 dotenv.config();
 
@@ -199,17 +200,32 @@ async function runTests() {
     // TEST 10: Successful payroll transaction and COMMIT
     // ------------------------------------------------------------------------
     try {
-      // Test payroll creation in a transaction
+      // Create a temporary test employee to verify isolated transaction and commit
+      const [tEmp] = await pool.query(
+        `INSERT INTO employees (employee_code, first_name, last_name, email, department_id, designation, role, password_hash, hire_date, status)
+         VALUES ('EMP_TX10', 'Tx', 'CommitTester', 'tx_commit@paytrace.local', 1, 'Tester', 'EMPLOYEE', 'h', '2026-01-01', 'ACTIVE')`
+      );
+      const testEmpId = tEmp.insertId;
+
       const conn = await pool.getConnection();
       await conn.beginTransaction();
       const [ins] = await conn.query(
         `INSERT INTO payrolls (employee_id, period_id, salary_id, present_days, gross_earnings, total_deductions, net_salary, payment_status, processed_by)
-         VALUES (1, 3, 1, 22.0, 150000.00, 27850.00, 122150.00, 'CALCULATED', 1)
-         ON DUPLICATE KEY UPDATE net_salary = VALUES(net_salary)`
+         VALUES (?, 1, 1, 22.0, 50000.00, 5000.00, 45000.00, 'CALCULATED', 1)`,
+        [testEmpId]
       );
       await conn.commit();
       conn.release();
-      recordTest(10, 'Successful payroll transaction and COMMIT', 'Valid payroll transaction', 'Transaction committed cleanly', 'Committed successfully', true, 'COMMIT executed and released');
+
+      // Verify row persisted
+      const [check] = await pool.query('SELECT payroll_id, net_salary FROM payrolls WHERE employee_id = ? AND period_id = 1', [testEmpId]);
+      const committed = check.length === 1 && parseFloat(check[0].net_salary) === 45000.00;
+
+      // Clean up test data
+      await pool.query('DELETE FROM payrolls WHERE employee_id = ?', [testEmpId]);
+      await pool.query('DELETE FROM employees WHERE employee_id = ?', [testEmpId]);
+
+      recordTest(10, 'Successful payroll transaction and COMMIT', `Employee ${testEmpId} payroll transaction`, 'Row committed and verified in database', `Committed: ${committed}`, committed, 'Transaction committed cleanly and verified');
     } catch (err) {
       recordTest(10, 'Successful payroll transaction and COMMIT', {}, 'Success', err.message, false, err.stack);
     }
@@ -230,16 +246,19 @@ async function runTests() {
     // TEST 12: Correct monthly attendance summary report
     // ------------------------------------------------------------------------
     try {
+      const [empCountRow] = await pool.query('SELECT COUNT(*) AS active_count FROM employees WHERE status = "ACTIVE"');
+      const activeCount = empCountRow[0].active_count;
+
       const [sumRows] = await pool.query(`
-        SELECT COUNT(*) AS total_employees, SUM(CASE WHEN a.is_late = TRUE THEN 1 ELSE 0 END) AS total_late_marks
+        SELECT COUNT(DISTINCT e.employee_id) AS total_employees, SUM(CASE WHEN a.is_late = TRUE THEN 1 ELSE 0 END) AS total_late_marks
         FROM employees e
         JOIN payroll_periods pp ON pp.period_id = 2
         LEFT JOIN attendance a ON e.employee_id = a.employee_id AND a.work_date BETWEEN pp.start_date AND pp.end_date
         WHERE e.status = 'ACTIVE'
       `);
       const row = sumRows[0];
-      const isValid = row.total_employees > 0 && row.total_late_marks > 0;
-      recordTest(12, 'Correct monthly attendance summary report', 'Period: July 2026 (Period 2)', 'Aggregated without Cartesian distortion', `Active employee rows: ${row.total_employees}, Late marks: ${row.total_late_marks}`, isValid, 'All 12 employees aggregated accurately');
+      const isValid = row.total_employees === activeCount && row.total_late_marks > 0;
+      recordTest(12, 'Correct monthly attendance summary report', 'Period: July 2026 (Period 2)', `Aggregates all ${activeCount} active employees without Cartesian distortion`, `Report rows: ${row.total_employees}, Late marks: ${row.total_late_marks}`, isValid, 'All active employees aggregated accurately');
     } catch (err) {
       recordTest(12, 'Correct monthly attendance summary report', {}, 'Valid summary', err.message, false, err.stack);
     }
@@ -264,6 +283,11 @@ async function runTests() {
     // TEST 14: Correct late-marks report
     // ------------------------------------------------------------------------
     try {
+      const [expectedRows] = await pool.query(`
+        SELECT COUNT(*) AS late_count
+        FROM attendance
+        WHERE work_date BETWEEN '2026-07-01' AND '2026-07-31' AND is_late = TRUE
+      `);
       const [lateRows] = await pool.query(`
         SELECT COUNT(*) AS late_count
         FROM attendance a
@@ -271,20 +295,29 @@ async function runTests() {
         WHERE a.work_date BETWEEN pp.start_date AND pp.end_date AND a.is_late = TRUE
       `);
       const lateCount = lateRows[0].late_count;
-      recordTest(14, 'Correct late-marks report', 'Period: July 2026', 'Exact count of tardy records', `Late records identified: ${lateCount}`, lateCount === 19, '19 tardy entries matched');
+      const expectedCount = expectedRows[0].late_count;
+      const isMatch = lateCount === expectedCount && lateCount > 0;
+      recordTest(14, 'Correct late-marks report', 'Period: July 2026', `Exact dynamic count of tardy records (${expectedCount})`, `Report count: ${lateCount}`, isMatch, `Dynamic match confirmed: ${lateCount} tardy entries`);
     } catch (err) {
-      recordTest(14, 'Correct late-marks report', {}, '19', err.message, false, err.stack);
+      recordTest(14, 'Correct late-marks report', {}, 'Match', err.message, false, err.stack);
     }
 
     // ------------------------------------------------------------------------
     // TEST 15: Employee access to their own authorized records (RBAC)
     // ------------------------------------------------------------------------
     try {
-      // Simulate authenticated token for EMP003 (employee_id = 3)
-      const empUser = { employee_id: 3, role: 'EMPLOYEE' };
-      const requestedId = 3;
-      const isAllowed = (empUser.role === 'HR_ADMIN') || (empUser.employee_id === requestedId);
-      recordTest(15, 'Employee access to own records (RBAC)', { user: empUser, target: requestedId }, 'Access granted (isAllowed = true)', `isAllowed: ${isAllowed}`, isAllowed, 'Self-service data isolation confirmed');
+      const mockReqSelf = {
+        user: { employee_id: 3, role: 'EMPLOYEE' },
+        params: { employeeId: '3' },
+        query: {},
+        body: {}
+      };
+      let nextCalled = false;
+      const mockRes = {
+        status: (code) => ({ json: (d) => { mockRes.statusCode = code; mockRes.body = d; } })
+      };
+      enforceSelfOrAdmin('employeeId')(mockReqSelf, mockRes, () => { nextCalled = true; });
+      recordTest(15, 'Employee access to own records (RBAC)', { user: mockReqSelf.user, targetId: 3 }, 'Middleware calls next() without error', `nextCalled: ${nextCalled}`, nextCalled, 'Actual enforceSelfOrAdmin middleware verified');
     } catch (err) {
       recordTest(15, 'Employee access to own records (RBAC)', {}, 'Granted', err.message, false, err.stack);
     }
@@ -293,10 +326,25 @@ async function runTests() {
     // TEST 16: Employee attempt to access another employee\'s records (Blocked)
     // ------------------------------------------------------------------------
     try {
-      const empUser = { employee_id: 3, role: 'EMPLOYEE' };
-      const forbiddenId = 4; // Target Sarah Jenkins
-      const isDenied = !((empUser.role === 'HR_ADMIN') || (empUser.employee_id === forbiddenId));
-      recordTest(16, 'Employee attempt to access other records (Blocked)', { user: empUser, target: forbiddenId }, 'Access denied with 403 Forbidden', `Denied: ${isDenied}`, isDenied, 'Cross-employee access strictly prevented');
+      const mockReqForbidden = {
+        user: { employee_id: 3, role: 'EMPLOYEE' },
+        params: { employeeId: '4' },
+        query: {},
+        body: {}
+      };
+      let forbiddenStatusCode = null;
+      let forbiddenBody = null;
+      const mockResForbidden = {
+        status: (code) => {
+          forbiddenStatusCode = code;
+          return {
+            json: (data) => { forbiddenBody = data; }
+          };
+        }
+      };
+      enforceSelfOrAdmin('employeeId')(mockReqForbidden, mockResForbidden, () => {});
+      const isBlocked = forbiddenStatusCode === 403 && forbiddenBody && forbiddenBody.error.includes('Access denied');
+      recordTest(16, 'Employee attempt to access other records (Blocked)', { user: mockReqForbidden.user, target: 4 }, 'Middleware returns 403 Forbidden', `Status: ${forbiddenStatusCode}, Error: ${forbiddenBody ? forbiddenBody.error : 'none'}`, isBlocked, 'Actual enforceSelfOrAdmin middleware blocks cross-employee access');
     } catch (err) {
       recordTest(16, 'Employee attempt to access other records (Blocked)', {}, 'Denied', err.message, false, err.stack);
     }
@@ -305,10 +353,22 @@ async function runTests() {
     // TEST 17: Employee attempt to perform HR/Admin action (Blocked)
     // ------------------------------------------------------------------------
     try {
-      const empUser = { employee_id: 3, role: 'EMPLOYEE' };
-      const allowedRoles = ['HR_ADMIN'];
-      const isForbidden = !allowedRoles.includes(empUser.role);
-      recordTest(17, 'Employee attempt to perform HR action (Blocked)', { role: empUser.role, required: allowedRoles }, '403 Forbidden', `isForbidden: ${isForbidden}`, isForbidden, 'HR privileges protected from regular employees');
+      const mockReqHR = {
+        user: { employee_id: 3, role: 'EMPLOYEE' }
+      };
+      let hrStatusCode = null;
+      let hrBody = null;
+      const mockResHR = {
+        status: (code) => {
+          hrStatusCode = code;
+          return {
+            json: (data) => { hrBody = data; }
+          };
+        }
+      };
+      requireRole('HR_ADMIN')(mockReqHR, mockResHR, () => {});
+      const isRoleBlocked = hrStatusCode === 403 && hrBody && hrBody.error.includes('Forbidden');
+      recordTest(17, 'Employee attempt to perform HR action (Blocked)', { user: mockReqHR.user, requiredRole: 'HR_ADMIN' }, 'Middleware returns 403 Forbidden', `Status: ${hrStatusCode}, Error: ${hrBody ? hrBody.error : 'none'}`, isRoleBlocked, 'Actual requireRole middleware blocks non-HR roles');
     } catch (err) {
       recordTest(17, 'Employee attempt to perform HR action (Blocked)', {}, 'Forbidden', err.message, false, err.stack);
     }
@@ -317,10 +377,20 @@ async function runTests() {
     // TEST 18: Unauthorized / Unauthenticated request rejection
     // ------------------------------------------------------------------------
     try {
-      // Missing token simulation
-      const reqHeaders = {};
-      const isAuthenticated = Boolean(reqHeaders.authorization);
-      recordTest(18, 'Unauthorized / Unauthenticated request rejection', 'No Authorization header', '401 Unauthorized', `Authenticated: ${isAuthenticated}`, !isAuthenticated, 'Requests without Bearer token rejected with 401');
+      const mockReqUnauth = { headers: {}, cookies: {} };
+      let unauthStatus = null;
+      let unauthBody = null;
+      const mockResUnauth = {
+        status: (code) => {
+          unauthStatus = code;
+          return {
+            json: (data) => { unauthBody = data; }
+          };
+        }
+      };
+      await authenticateToken(mockReqUnauth, mockResUnauth, () => {});
+      const isUnauthBlocked = unauthStatus === 401 && unauthBody && unauthBody.error.includes('Authentication required');
+      recordTest(18, 'Unauthorized / Unauthenticated request rejection', 'No token provided', 'Middleware returns 401 Unauthorized', `Status: ${unauthStatus}, Error: ${unauthBody ? unauthBody.error : 'none'}`, isUnauthBlocked, 'Actual authenticateToken middleware blocks unauthenticated requests');
     } catch (err) {
       recordTest(18, 'Unauthorized / Unauthenticated request rejection', {}, '401', err.message, false, err.stack);
     }
