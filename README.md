@@ -103,12 +103,19 @@ DB_NAME=paytrace_db
 JWT_SECRET=supersecret_paytrace_academic_jwt_key_2026_secure
 ```
 
-### 3. Database Initialization
+### 3. Database Initialization & Environment Safety
+
+> [!WARNING]
+> **Destructive Reset vs. Safe Provisioning:**
+> `database/setup.sql` sources `database/schema.sql` (which includes `DROP TABLE IF EXISTS`) and `database/seed.sql` (which truncates and repopulates demo records). Running `setup.sql` **destroys all existing tables and reinitializes the database from scratch**.
+> - **Initial Fresh Setup / Demo Reset:** Run the command below only when first setting up the project or when explicitly resetting the demo environment to its clean baseline state.
+> - **Active / Production Environments:** Never run `setup.sql` or `schema.sql` against a live or user-populated database. To preserve existing data without dropping tables, execute migration DDLs or inspect schema definitions individually.
+
 Execute the master provisioning script against your database server:
 ```bash
 mariadb -u root -h 127.0.0.1 < database/setup.sql
 ```
-*This command provisions the database, tables, functions, triggers, procedures, and generates 12 employees across 3 complete months (792 attendance records and 36 finalized payroll statements).*
+*This command provisions the database, tables, functions, triggers, procedures, indexes, and populates 12 employees across 3 complete months (792 attendance records and 36 finalized payroll statements).*
 
 ### 4. Install Dependencies
 ```bash
