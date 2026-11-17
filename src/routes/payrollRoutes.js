@@ -181,7 +181,7 @@ router.post('/process', requireRole('HR_ADMIN'), async (req, res) => {
     }
   } catch (err) {
     console.error('Process payroll error:', err);
-    res.status(500).json({ success: false, error: err.message || 'Payroll processing failed.' });
+    res.status(500).json({ success: false, error: 'Payroll processing failed due to an internal server error.' });
   }
 });
 
@@ -202,7 +202,8 @@ router.post('/test-rollback', requireRole('HR_ADMIN'), async (req, res) => {
       message: out.message
     });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('Test rollback error:', err);
+    res.status(500).json({ success: false, error: 'Transaction rollback test failed due to an internal server error.' });
   }
 });
 

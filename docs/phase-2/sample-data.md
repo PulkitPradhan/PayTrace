@@ -50,7 +50,7 @@ The PayTrace seed dataset models a mid-sized organization across **12 employees*
 
 - **792 Total Attendance Records:** Continuous daily weekday attendance logged across all 12 employees over 3 months.
 - **Punctuality Variations:**
-  - `EMP004` (Sarah Jenkins) exhibits chronic late marks in July 2026 (5 late arrivals: July 6, 13, 20, 24, 29), triggering the >3 late threshold penalty.
+  - `EMP004` (Sarah Jenkins) exhibits chronic late marks in July 2026 (6 late arrivals: July 6, 13, 15, 20, 24, 29), triggering the >3 late threshold penalty (3 penalty marks = $6,521.75).
   - `EMP008` (Liam Patel) exhibits 4 late arrivals in August 2026, triggering 1 penalty deduction.
   - `EMP011` (Aisha Khan) exhibits 2 late arrivals in June 2026 (within the 3-day grace threshold, incur $0 penalty).
 - **Absences & Approved Leaves:**

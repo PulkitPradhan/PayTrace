@@ -100,8 +100,14 @@ DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=
 DB_NAME=paytrace_db
-JWT_SECRET=supersecret_paytrace_academic_jwt_key_2026_secure
+JWT_SECRET=your_secure_random_jwt_secret_key_here
 ```
+
+> [!NOTE]
+> Generate a cryptographically strong 256-bit JWT secret for your local environment:
+> ```bash
+> node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+> ```
 
 ### 3. Database Initialization & Environment Safety
 

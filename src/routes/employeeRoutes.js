@@ -116,7 +116,7 @@ router.post('/', requireRole('HR_ADMIN'), async (req, res) => {
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ success: false, error: 'Employee code or email already exists.' });
     }
-    res.status(500).json({ success: false, error: err.message || 'Failed to create employee.' });
+    res.status(500).json({ success: false, error: 'Failed to create employee due to an internal server error.' });
   } finally {
     conn.release();
   }

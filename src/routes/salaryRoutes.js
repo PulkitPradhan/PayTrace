@@ -60,10 +60,11 @@ router.post('/:employeeId', requireRole('HR_ADMIN'), async (req, res) => {
     });
   } catch (err) {
     await conn.rollback();
-    if (err.message.includes('chk_salary_basic')) {
+    console.error('Revise salary structure error:', err);
+    if (err.message && err.message.includes('chk_salary_basic')) {
       return res.status(400).json({ success: false, error: 'Salary values cannot be negative.' });
     }
-    res.status(500).json({ success: false, error: err.message || 'Failed to revise salary structure.' });
+    res.status(500).json({ success: false, error: 'Failed to revise salary structure due to an internal server error.' });
   } finally {
     conn.release();
   }

@@ -85,10 +85,16 @@ router.post('/clock-in', async (req, res) => {
     });
   } catch (err) {
     console.error('Clock in error:', err);
-    if (err.message.includes('approved leave')) {
+    if (err.message && err.message.includes('approved leave')) {
       return res.status(400).json({ success: false, error: 'Cannot clock in: You are scheduled on approved leave today.' });
     }
-    res.status(500).json({ success: false, error: err.message || 'Clock-in failed.' });
+    if (err.message && err.message.includes('cannot be earlier than check-in time')) {
+      return res.status(400).json({ success: false, error: 'Cannot clock in: Check-out time cannot be earlier than check-in time.' });
+    }
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ success: false, error: 'Attendance for this date has already been registered.' });
+    }
+    res.status(500).json({ success: false, error: 'Clock-in failed due to an internal server error.' });
   }
 });
 

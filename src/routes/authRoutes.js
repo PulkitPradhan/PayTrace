@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
-const { JWT_SECRET } = require('../middleware/auth');
+const { getJwtSecret } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -45,7 +45,7 @@ router.post('/login', async (req, res) => {
         role: employee.role,
         email: employee.email
       },
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: '8h' }
     );
 
@@ -96,7 +96,7 @@ router.get('/me', async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     const [rows] = await pool.query(
       `SELECT e.employee_id, e.employee_code, e.first_name, e.last_name, e.email, e.role, e.status, d.department_name, e.designation
        FROM employees e

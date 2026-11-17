@@ -14,7 +14,7 @@ This directory contains the complete academic project documentation for the PayT
 
 | File Name | Format | Description |
 | :--- | :---: | :--- |
-| **[`PayTrace_Project_Report.pdf`](PayTrace_Project_Report.pdf)** | **PDF (A4)** | **Primary Deliverable:** 24-page submission-ready academic report with dynamic running headers, running footers, page numbering, embedded vector diagrams, authentic application screenshots, and mathematical reconciliation. |
+| **[`PayTrace_Project_Report.pdf`](PayTrace_Project_Report.pdf)** | **PDF (A4)** | **Primary Deliverable:** 23-page submission-ready academic report with dynamic running headers, running footers, page numbering, embedded vector diagrams, authentic application screenshots, and mathematical reconciliation. |
 | **[`PayTrace_Project_Report.md`](PayTrace_Project_Report.md)** | **Markdown** | **Editable Source:** Complete structured markdown source covering all 24 project chapters, requirements, normalization proofs, mathematical calculations, and appendices. |
 | **[`PayTrace_Project_Report.html`](PayTrace_Project_Report.html)** | **HTML5** | **Intermediate Web Source:** Standalone styled HTML document with base64-embedded assets and print media styling used by Chromium to produce the PDF. |
 | **[`generate_pdf.js`](generate_pdf.js)** | **Node.js** | **Reproduction Script:** Automated zero-dependency generator that drives Chromium headless via the Chrome DevTools Protocol (CDP) to compile the PDF. |
@@ -23,7 +23,7 @@ This directory contains the complete academic project documentation for the PayT
 
 ## 2. Report Overview & Structure
 
-The project report spans 24 pages formatted to standard ISO A4 portrait dimensions (`595.92 × 841.92 pts`), featuring:
+The project report spans 23 pages formatted to standard ISO A4 portrait dimensions (`595.92 × 841.92 pts`), featuring:
 
 1. **Cover Page & Formal Institutional Placeholders:** Project identity, author details, academic supervisor placeholder, and certificate/declaration templates.
 2. **System Architecture & 3-Tier Model:** Detailed breakdown of the Vanilla SPA, Express 5 security pipeline (`authenticateToken`, `requireRole`, `enforceSelfOrAdmin`), and MariaDB InnoDB persistence layer, accompanied by Figure 4.1 ([`system-architecture.png`](../assets/diagrams/system-architecture.png)).
@@ -70,7 +70,7 @@ File size: 4.92 MB (5162379 bytes)
 To verify PDF metadata, page count, and text layer:
 
 ```bash
-# Verify PDF metadata and page count (24 pages A4)
+# Verify PDF metadata and page count (23 pages A4)
 pdfinfo docs/report/PayTrace_Project_Report.pdf
 
 # Verify text layer and heading extraction

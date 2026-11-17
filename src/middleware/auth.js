@@ -1,9 +1,35 @@
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error('FATAL SECURITY ERROR: JWT_SECRET environment variable is not defined.');
+const INSECURE_DEFAULTS = [
+  'supersecret_paytrace_academic_jwt_key_2026_secure',
+  'your_jwt_secret_change_in_production',
+  'your_secure_random_jwt_secret_key_here',
+  'secret',
+  'jwt_secret',
+  'changeme',
+  'password',
+  '12345678'
+];
+
+function validateJwtSecret(secret, env = process.env.NODE_ENV) {
+  if (!secret || typeof secret !== 'string' || secret.trim().length === 0) {
+    throw new Error('FATAL SECURITY ERROR: JWT_SECRET environment variable is not defined or is empty.');
+  }
+  const trimmed = secret.trim();
+  if (env === 'production') {
+    if (trimmed.length < 32) {
+      throw new Error('FATAL SECURITY ERROR: JWT_SECRET must be at least 32 characters in production.');
+    }
+    if (INSECURE_DEFAULTS.includes(trimmed)) {
+      throw new Error('FATAL SECURITY ERROR: Known insecure/default JWT_SECRET cannot be used in production.');
+    }
+  }
+  return trimmed;
+}
+
+function getJwtSecret() {
+  return validateJwtSecret(process.env.JWT_SECRET);
 }
 
 async function authenticateToken(req, res, next) {
@@ -23,7 +49,8 @@ async function authenticateToken(req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const secret = getJwtSecret();
+    const decoded = jwt.verify(token, secret);
     
     // Verify user is still active in database
     const [rows] = await pool.query(
@@ -92,5 +119,10 @@ module.exports = {
   authenticateToken,
   requireRole,
   enforceSelfOrAdmin,
-  JWT_SECRET
+  validateJwtSecret,
+  getJwtSecret,
+  INSECURE_DEFAULTS,
+  get JWT_SECRET() {
+    return getJwtSecret();
+  }
 };

@@ -80,10 +80,10 @@ router.post('/', async (req, res) => {
     });
   } catch (err) {
     console.error('Apply leave error:', err);
-    if (err.message.includes('chk_leave_dates') || err.message.includes('start_date cannot be after end_date')) {
+    if (err.message && (err.message.includes('chk_leave_dates') || err.message.includes('start_date cannot be after end_date'))) {
       return res.status(400).json({ success: false, error: 'Invalid dates: start date cannot be after end date.' });
     }
-    res.status(500).json({ success: false, error: err.message || 'Failed to submit leave.' });
+    res.status(500).json({ success: false, error: 'Failed to submit leave request due to an internal server error.' });
   }
 });
 
@@ -110,13 +110,13 @@ router.put('/:leaveId/status', requireRole('HR_ADMIN'), async (req, res) => {
     });
   } catch (err) {
     console.error('Update leave status error:', err);
-    if (err.message.includes('Conflicting leave: overlapping approved leave')) {
+    if (err.message && err.message.includes('Conflicting leave: overlapping approved leave')) {
       return res.status(409).json({
         success: false,
         error: 'Cannot approve leave: Overlapping approved leave already exists for this employee.'
       });
     }
-    res.status(500).json({ success: false, error: err.message || 'Failed to update leave status.' });
+    res.status(500).json({ success: false, error: 'Failed to update leave status due to an internal server error.' });
   }
 });
 

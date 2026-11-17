@@ -518,19 +518,19 @@ A pivotal architectural achievement of PayTrace is historical snapshot preservat
 > **Authoritative Database Resolution:** Inspection of `database/seed.sql` and `database/functions.sql` proves that the database records and UI screenshot `08-itemized-salary-slip.png` represent the true implementation: PF is configured as \$7,800.00 (12% statutory basic), and TDS is computed as \$6,250.00 by `fn_calculate_monthly_tds(1200000.00)`. The prior informal note had mentally assumed a 15% bracket, whereas the actual SQL code enforces 10% on the third tier.
 
 #### Case B: Liam Patel (`EMP008`) — June 2026 (Unpaid Leave Deduction)
-- **Salary Profile:** Basic: \$62,000.00, HRA: \$25,000.00, Special: \$10,000.00 $\implies$ **Gross = \$97,000.00**
+- **Salary Profile:** Basic: \$62,000.00, HRA: \$24,800.00 (40%), Special: \$10,200.00 $\implies$ **Gross = \$97,000.00**
 - **Period Parameters:** June 2026 contains 22 working days.
 - **Daily Rate:** $\text{Daily Rate} = \frac{\$97,000.00}{22} = \$4,409.0909 \implies \mathbf{\$4,409.09}$
-- **Leave Records:** 2 approved unpaid leave days.
-- **Unpaid Leave Penalty:** $2 \times \$4,409.0909 = \mathbf{\$8,818.18}$
-- **Statutory & Tax Deductions:** PF: \$6,340.00, PT: \$200.00, TDS: \$7,050.00.
-- **Total Deductions:** $\$8,818.18 + \$6,340.00 + \$200.00 + \$7,050.00 = \mathbf{\$22,408.18}$
+- **Leave Records:** 2 approved unpaid leave days (June 18–19, 2026).
+- **Unpaid Leave Deduction:** $2 \times \$4,409.0909 = \mathbf{\$8,818.18}$
+- **Statutory & Tax Deductions:** PF: \$7,440.00 (12% of basic), PT: \$200.00, TDS: \$5,950.00 (`fn_calculate_monthly_tds(1164000.00)`).
+- **Total Deductions:** $\$8,818.18 + \$7,440.00 + \$200.00 + \$5,950.00 = \mathbf{\$22,408.18}$
 - **Net Salary:** $\$97,000.00 - \$22,408.18 = \mathbf{\$74,591.82}$ (Exact Cent-for-Cent Match).
 
 #### Case C: Aisha Khan (`EMP011`) — June 2026 (Baseline Clean Calculation)
-- **Salary Profile:** Basic: \$35,000.00, HRA: \$15,000.00, Special: \$5,000.00 $\implies$ **Gross = \$55,000.00**
-- **Attendance/Leave:** Zero late marks, zero unpaid leaves.
-- **Statutory & Tax Deductions:** PF: \$4,200.00, PT: \$200.00, TDS: \$1,750.00.
+- **Salary Profile:** Basic: \$35,000.00, HRA: \$14,000.00 (40%), Special: \$6,000.00 $\implies$ **Gross = \$55,000.00**
+- **Attendance/Leave:** Zero late marks, zero unpaid leaves (22 present days).
+- **Statutory & Tax Deductions:** PF: \$4,200.00 (12% of basic), PT: \$200.00, TDS: \$1,750.00 (`fn_calculate_monthly_tds(660000.00)`).
 - **Total Deductions:** $\$4,200.00 + \$200.00 + \$1,750.00 = \mathbf{\$6,150.00}$
 - **Net Salary:** $\$55,000.00 - \$6,150.00 = \mathbf{\$48,850.00}$ (Exact Cent-for-Cent Match).
 

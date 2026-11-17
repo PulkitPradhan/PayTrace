@@ -7,7 +7,7 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
-const { authenticateToken, requireRole, enforceSelfOrAdmin } = require('../src/middleware/auth');
+const { authenticateToken, requireRole, enforceSelfOrAdmin, validateJwtSecret, getJwtSecret, INSECURE_DEFAULTS } = require('../src/middleware/auth');
 
 dotenv.config();
 
@@ -21,7 +21,7 @@ const pool = mysql.createPool({
   decimalNumbers: true
 });
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_paytrace_academic_jwt_key_2026_secure';
+const JWT_SECRET = getJwtSecret();
 
 const results = [];
 
@@ -168,32 +168,105 @@ async function runTests() {
     }
 
     // ------------------------------------------------------------------------
-    // TEST 8: Correct salary calculation formula
+    // TEST 8: Correct salary calculation formula and line-item components
     // ------------------------------------------------------------------------
     try {
-      // Verify Sarah Jenkins (EMP004) July 2026 values
+      // 1. Verify Sarah Jenkins (EMP004) July 2026 header and itemized line items
       const [pRows] = await pool.query(
-        'SELECT gross_earnings, total_deductions, net_salary, late_days FROM payrolls WHERE employee_id = 4 AND period_id = 2'
+        'SELECT payroll_id, gross_earnings, total_deductions, net_salary, late_days FROM payrolls WHERE employee_id = 4 AND period_id = 2'
       );
       const p = pRows[0];
-      // Expected: gross = 100000, late_days = 6 (>3 late marks), net = 79228.25
-      const isNetAccurate = parseFloat(p.net_salary) === 79228.25;
-      const isGrossAccurate = parseFloat(p.gross_earnings) === 100000.00;
-      recordTest(8, 'Correct salary calculation formula', 'EMP004 in July 2026', 'Gross: 100000.00, Net: 79228.25', `Gross: ${p.gross_earnings}, Net: ${p.net_salary}`, isNetAccurate && isGrossAccurate, `Formula verified with exact decimal precision: Net = Gross - Deductions`);
+      const [sarahItems] = await pool.query(
+        'SELECT item_name, item_type, amount FROM payroll_items WHERE payroll_id = ?',
+        [p.payroll_id]
+      );
+      const itemMap = {};
+      sarahItems.forEach(it => { itemMap[it.item_name] = parseFloat(it.amount); });
+
+      const sarahGrossOk = parseFloat(p.gross_earnings) === 100000.00;
+      const sarahDeductOk = parseFloat(p.total_deductions) === 20771.75;
+      const sarahNetOk = parseFloat(p.net_salary) === 79228.25;
+      const sarahLateDaysOk = parseInt(p.late_days, 10) === 6;
+      const sarahPfOk = itemMap['Provident Fund (PF)'] === 7800.00;
+      const sarahPtOk = itemMap['Professional Tax'] === 200.00;
+      const sarahLateOk = itemMap['Late Attendance Penalty'] === 6521.75;
+      const sarahTdsOk = itemMap['Income Tax (TDS)'] === 6250.00;
+
+      // 2. Verify Liam Patel (EMP008) June 2026 unpaid leave pro-rata deduction
+      const [liamRows] = await pool.query(
+        'SELECT payroll_id, gross_earnings, total_deductions, net_salary, unpaid_leave_days FROM payrolls WHERE employee_id = 8 AND period_id = 1'
+      );
+      const liam = liamRows[0];
+      const [liamItems] = await pool.query(
+        'SELECT item_name, amount FROM payroll_items WHERE payroll_id = ?',
+        [liam.payroll_id]
+      );
+      const liamMap = {};
+      liamItems.forEach(it => { liamMap[it.item_name] = parseFloat(it.amount); });
+
+      const liamGrossOk = parseFloat(liam.gross_earnings) === 97000.00;
+      const liamDeductOk = parseFloat(liam.total_deductions) === 22408.18;
+      const liamNetOk = parseFloat(liam.net_salary) === 74591.82;
+      const liamUnpaidOk = liamMap['Unpaid Leave Deduction'] === 8818.18;
+      const liamPfOk = liamMap['Provident Fund (PF)'] === 7440.00;
+      const liamTdsOk = liamMap['Income Tax (TDS)'] === 5950.00;
+
+      // 3. Verify Aisha Khan (EMP011) June 2026 clean baseline
+      const [aishaRows] = await pool.query(
+        'SELECT gross_earnings, total_deductions, net_salary FROM payrolls WHERE employee_id = 11 AND period_id = 1'
+      );
+      const aisha = aishaRows[0];
+      const aishaGrossOk = parseFloat(aisha.gross_earnings) === 55000.00;
+      const aishaDeductOk = parseFloat(aisha.total_deductions) === 6150.00;
+      const aishaNetOk = parseFloat(aisha.net_salary) === 48850.00;
+
+      const allCalculationsOk = sarahGrossOk && sarahDeductOk && sarahNetOk && sarahLateDaysOk &&
+        sarahPfOk && sarahPtOk && sarahLateOk && sarahTdsOk &&
+        liamGrossOk && liamDeductOk && liamNetOk && liamUnpaidOk && liamPfOk && liamTdsOk &&
+        aishaGrossOk && aishaDeductOk && aishaNetOk;
+
+      recordTest(
+        8,
+        'Correct salary calculation formula and line-item components',
+        'EMP004 (Excess Late), EMP008 (Unpaid Leave), EMP011 (Baseline)',
+        'Sarah: Gross 100k, PF 7.8k, Late 6521.75, TDS 6250, Net 79228.25 | Liam: Gross 97k, Unpaid 8818.18, Net 74591.82 | Aisha: Net 48850.00',
+        `Sarah Net: ${p.net_salary}, Liam Net: ${liam.net_salary}, Aisha Net: ${aisha.net_salary}`,
+        allCalculationsOk,
+        `All earnings and itemized deductions (PF, PT, Late Penalty, Unpaid Leave, TDS) verified with exact precision`
+      );
     } catch (err) {
-      recordTest(8, 'Correct salary calculation formula', {}, 'Match', err.message, false, err.stack);
+      recordTest(8, 'Correct salary calculation formula and line-item components', {}, 'Match', err.message, false, err.stack);
     }
 
     // ------------------------------------------------------------------------
-    // TEST 9: Correct progressive tax deduction (fn_calculate_monthly_tds)
+    // TEST 9: Correct progressive tax deduction across all 4 tax slabs and boundaries
     // ------------------------------------------------------------------------
     try {
-      // Annual Gross = 1,200,000. Slab: 15000 + 10% * (1200000 - 600000) = 15000 + 60000 = 75000 annual. Monthly = 75000 / 12 = 6250.00
-      const [tdsRows] = await pool.query('SELECT fn_calculate_monthly_tds(1200000.00) AS tds');
-      const tdsVal = parseFloat(tdsRows[0].tds);
-      recordTest(9, 'Correct progressive tax deduction', 'Annual: 1,200,000.00', 'Monthly TDS: 6250.00', `TDS: ${tdsVal}`, tdsVal === 6250.00, `Progressive slab verified`);
+      const [t1] = await pool.query('SELECT fn_calculate_monthly_tds(250000.00) AS tds');
+      const [t1b] = await pool.query('SELECT fn_calculate_monthly_tds(300000.00) AS tds');
+      const [t2] = await pool.query('SELECT fn_calculate_monthly_tds(480000.00) AS tds');
+      const [t2b] = await pool.query('SELECT fn_calculate_monthly_tds(600000.00) AS tds');
+      const [t3] = await pool.query('SELECT fn_calculate_monthly_tds(1200000.00) AS tds');
+      const [t4] = await pool.query('SELECT fn_calculate_monthly_tds(1800000.00) AS tds');
+
+      const isSlab1Ok = parseFloat(t1[0].tds) === 0.00 && parseFloat(t1b[0].tds) === 0.00;
+      const isSlab2Ok = parseFloat(t2[0].tds) === 750.00 && parseFloat(t2b[0].tds) === 1250.00;
+      const isSlab3Ok = parseFloat(t3[0].tds) === 6250.00;
+      const isSlab4Ok = parseFloat(t4[0].tds) === 16250.00;
+
+      const allSlabsOk = isSlab1Ok && isSlab2Ok && isSlab3Ok && isSlab4Ok;
+
+      recordTest(
+        9,
+        'Correct progressive tax deduction across all 4 tax slabs and boundaries',
+        'Annual: 250k, 300k, 480k, 600k, 1.2M, 1.8M',
+        'TDS: [0.00, 0.00, 750.00, 1250.00, 6250.00, 16250.00]',
+        `TDS: [${t1[0].tds}, ${t1b[0].tds}, ${t2[0].tds}, ${t2b[0].tds}, ${t3[0].tds}, ${t4[0].tds}]`,
+        allSlabsOk,
+        'Progressive 4-tier income tax slabs verified with exact monthly pro-rata calculation'
+      );
     } catch (err) {
-      recordTest(9, 'Correct progressive tax deduction', {}, '6250.00', err.message, false, err.stack);
+      recordTest(9, 'Correct progressive tax deduction across all 4 tax slabs and boundaries', {}, 'Slabs match', err.message, false, err.stack);
     }
 
     // ------------------------------------------------------------------------
@@ -323,30 +396,97 @@ async function runTests() {
     }
 
     // ------------------------------------------------------------------------
-    // TEST 16: Employee attempt to access another employee\'s records (Blocked)
+    // TEST 16: Cross-employee data access denial & parameter tampering prevention (RBAC)
     // ------------------------------------------------------------------------
     try {
-      const mockReqForbidden = {
+      let isBlockedCount = 0;
+
+      // 1. Route parameter tampering: Employee 3 requesting /api/employees/4
+      const mockReqParams = {
         user: { employee_id: 3, role: 'EMPLOYEE' },
         params: { employeeId: '4' },
         query: {},
         body: {}
       };
-      let forbiddenStatusCode = null;
-      let forbiddenBody = null;
-      const mockResForbidden = {
+      let statusParam = null;
+      let bodyParam = null;
+      const mockResParam = {
         status: (code) => {
-          forbiddenStatusCode = code;
-          return {
-            json: (data) => { forbiddenBody = data; }
-          };
+          statusParam = code;
+          return { json: (data) => { bodyParam = data; } };
         }
       };
-      enforceSelfOrAdmin('employeeId')(mockReqForbidden, mockResForbidden, () => {});
-      const isBlocked = forbiddenStatusCode === 403 && forbiddenBody && forbiddenBody.error.includes('Access denied');
-      recordTest(16, 'Employee attempt to access other records (Blocked)', { user: mockReqForbidden.user, target: 4 }, 'Middleware returns 403 Forbidden', `Status: ${forbiddenStatusCode}, Error: ${forbiddenBody ? forbiddenBody.error : 'none'}`, isBlocked, 'Actual enforceSelfOrAdmin middleware blocks cross-employee access');
+      enforceSelfOrAdmin('employeeId')(mockReqParams, mockResParam, () => {});
+      if (statusParam === 403 && bodyParam && bodyParam.error.includes('Access denied')) isBlockedCount++;
+
+      // 2. Query parameter tampering: Employee 3 querying ?employeeId=4
+      const mockReqQuery = {
+        user: { employee_id: 3, role: 'EMPLOYEE' },
+        params: {},
+        query: { employeeId: '4' },
+        body: {}
+      };
+      let statusQuery = null;
+      let bodyQuery = null;
+      const mockResQuery = {
+        status: (code) => {
+          statusQuery = code;
+          return { json: (data) => { bodyQuery = data; } };
+        }
+      };
+      enforceSelfOrAdmin('employeeId')(mockReqQuery, mockResQuery, () => {});
+      if (statusQuery === 403 && bodyQuery && bodyQuery.error.includes('Access denied')) isBlockedCount++;
+
+      // 3. Body parameter tampering: Employee 3 submitting body { employeeId: 4 }
+      const mockReqBody = {
+        user: { employee_id: 3, role: 'EMPLOYEE' },
+        params: {},
+        query: {},
+        body: { employeeId: 4 }
+      };
+      let statusBody = null;
+      let bodyBody = null;
+      const mockResBody = {
+        status: (code) => {
+          statusBody = code;
+          return { json: (data) => { bodyBody = data; } };
+        }
+      };
+      enforceSelfOrAdmin('employeeId')(mockReqBody, mockResBody, () => {});
+      if (statusBody === 403 && bodyBody && bodyBody.error.includes('Access denied')) isBlockedCount++;
+
+      // 4. Authorized self access: Employee 3 requesting own ID
+      let selfNextCalled = false;
+      const mockReqSelf = {
+        user: { employee_id: 3, role: 'EMPLOYEE' },
+        params: { employeeId: '3' },
+        query: {},
+        body: {}
+      };
+      enforceSelfOrAdmin('employeeId')(mockReqSelf, {}, () => { selfNextCalled = true; });
+
+      // 5. Authorized HR Admin access: HR Admin requesting Employee 4
+      let adminNextCalled = false;
+      const mockReqAdmin = {
+        user: { employee_id: 1, role: 'HR_ADMIN' },
+        params: { employeeId: '4' },
+        query: {},
+        body: {}
+      };
+      enforceSelfOrAdmin('employeeId')(mockReqAdmin, {}, () => { adminNextCalled = true; });
+
+      const isRbacSound = isBlockedCount === 3 && selfNextCalled && adminNextCalled;
+      recordTest(
+        16,
+        'Cross-employee data access denial and parameter tampering prevention (RBAC)',
+        'Param, query, and body tampering attempts by Employee 3 targeting Employee 4',
+        'All tampering blocked with 403 Forbidden; legitimate self/admin requests permitted',
+        `Blocked violations: ${isBlockedCount}/3, Self access: ${selfNextCalled}, Admin access: ${adminNextCalled}`,
+        isRbacSound,
+        'enforceSelfOrAdmin middleware defends route params, query string, and request body'
+      );
     } catch (err) {
-      recordTest(16, 'Employee attempt to access other records (Blocked)', {}, 'Denied', err.message, false, err.stack);
+      recordTest(16, 'Cross-employee data access denial and parameter tampering prevention (RBAC)', {}, 'Denied', err.message, false, err.stack);
     }
 
     // ------------------------------------------------------------------------
@@ -374,25 +514,82 @@ async function runTests() {
     }
 
     // ------------------------------------------------------------------------
-    // TEST 18: Unauthorized / Unauthenticated request rejection
+    // TEST 18: Unauthorized / Unauthenticated request rejection and JWT validation security
     // ------------------------------------------------------------------------
     try {
-      const mockReqUnauth = { headers: {}, cookies: {} };
-      let unauthStatus = null;
-      let unauthBody = null;
-      const mockResUnauth = {
-        status: (code) => {
-          unauthStatus = code;
-          return {
-            json: (data) => { unauthBody = data; }
-          };
-        }
-      };
-      await authenticateToken(mockReqUnauth, mockResUnauth, () => {});
-      const isUnauthBlocked = unauthStatus === 401 && unauthBody && unauthBody.error.includes('Authentication required');
-      recordTest(18, 'Unauthorized / Unauthenticated request rejection', 'No token provided', 'Middleware returns 401 Unauthorized', `Status: ${unauthStatus}, Error: ${unauthBody ? unauthBody.error : 'none'}`, isUnauthBlocked, 'Actual authenticateToken middleware blocks unauthenticated requests');
+      let authChecksPassed = 0;
+
+      // 1. Missing token header
+      const mockReqMissing = { headers: {}, cookies: {} };
+      let statusMissing = null;
+      let bodyMissing = null;
+      await authenticateToken(mockReqMissing, {
+        status: (c) => { statusMissing = c; return { json: (d) => { bodyMissing = d; } }; }
+      }, () => {});
+      if (statusMissing === 401 && bodyMissing && bodyMissing.error.includes('Authentication required')) authChecksPassed++;
+
+      // 2. Malformed token string
+      const mockReqMalformed = { headers: { authorization: 'Bearer not-a-valid-jwt-token' }, cookies: {} };
+      let statusMalformed = null;
+      await authenticateToken(mockReqMalformed, {
+        status: (c) => { statusMalformed = c; return { json: () => {} }; }
+      }, () => {});
+      if (statusMalformed === 401) authChecksPassed++;
+
+      // 3. Token signed with wrong secret (forged token)
+      const forgedToken = jwt.sign({ employee_id: 3 }, 'wrong_secret_attacker_key');
+      const mockReqForged = { headers: { authorization: `Bearer ${forgedToken}` }, cookies: {} };
+      let statusForged = null;
+      await authenticateToken(mockReqForged, {
+        status: (c) => { statusForged = c; return { json: () => {} }; }
+      }, () => {});
+      if (statusForged === 401) authChecksPassed++;
+
+      // 4. Expired token
+      const expiredToken = jwt.sign({ employee_id: 3 }, JWT_SECRET, { expiresIn: '-10s' });
+      const mockReqExpired = { headers: { authorization: `Bearer ${expiredToken}` }, cookies: {} };
+      let statusExpired = null;
+      await authenticateToken(mockReqExpired, {
+        status: (c) => { statusExpired = c; return { json: () => {} }; }
+      }, () => {});
+      if (statusExpired === 401) authChecksPassed++;
+
+      // 5. Fail-closed JWT_SECRET validation (empty secret, short prod secret, blacklisted secret)
+      let emptySecretFailed = false;
+      try {
+        validateJwtSecret('');
+      } catch (e) {
+        emptySecretFailed = e.message.includes('FATAL SECURITY ERROR');
+      }
+
+      let shortProdSecretFailed = false;
+      try {
+        validateJwtSecret('short_secret_123', 'production');
+      } catch (e) {
+        shortProdSecretFailed = e.message.includes('at least 32 characters in production');
+      }
+
+      let blacklistedSecretFailed = false;
+      try {
+        validateJwtSecret(INSECURE_DEFAULTS[0], 'production');
+      } catch (e) {
+        blacklistedSecretFailed = e.message.includes('Known insecure/default JWT_SECRET');
+      }
+
+      if (emptySecretFailed && shortProdSecretFailed && blacklistedSecretFailed) authChecksPassed++;
+
+      const isAuthSecuritySolid = authChecksPassed === 5;
+      recordTest(
+        18,
+        'Unauthorized / Unauthenticated request rejection and JWT validation security',
+        'Missing, malformed, forged, expired tokens, and fail-closed secret validation',
+        'All unauthorized attempts rejected with 401; insecure secret configs fail-closed',
+        `Security checks passed: ${authChecksPassed}/5`,
+        isAuthSecuritySolid,
+        'authenticateToken middleware rejects all invalid tokens; secret validator enforces production crypto hygiene'
+      );
     } catch (err) {
-      recordTest(18, 'Unauthorized / Unauthenticated request rejection', {}, '401', err.message, false, err.stack);
+      recordTest(18, 'Unauthorized / Unauthenticated request rejection and JWT validation security', {}, '401', err.message, false, err.stack);
     }
 
     // ------------------------------------------------------------------------

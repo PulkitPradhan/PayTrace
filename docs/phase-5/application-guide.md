@@ -25,7 +25,7 @@
 
 ### 3.1 Environment Configuration
 Create a `.env` file from the provided `.env.example`:
-```bash
+```ini
 PORT=3000
 NODE_ENV=development
 DB_HOST=127.0.0.1
@@ -33,7 +33,12 @@ DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=
 DB_NAME=paytrace_db
-JWT_SECRET=supersecret_paytrace_academic_jwt_key_2026_secure
+JWT_SECRET=your_secure_random_jwt_secret_key_here
+```
+
+Generate a cryptographically strong 256-bit JWT signing secret:
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 ### 3.2 Database Initialization
