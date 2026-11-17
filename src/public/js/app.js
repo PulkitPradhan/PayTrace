@@ -8,6 +8,14 @@ let currentToken = null;
 // Currency Formatter
 const formatMoney = (val) => '$' + parseFloat(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+// Date Formatter
+const formatDate = (val) => {
+  if (!val) return '—';
+  if (typeof val === 'string' && val.length >= 10) return val.slice(0, 10);
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? val : d.toISOString().slice(0, 10);
+};
+
 // Toast Notifications
 function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
@@ -123,7 +131,7 @@ function renderAuthenticatedUI() {
   document.getElementById('emp-clock-in-card').style.display = isHR ? 'none' : 'flex';
 
   if (!isHR) {
-    document.getElementById('dash-subtitle').textContent = `Department: ${currentUser.department_name} • Staff Self-Service Portal`;
+    document.getElementById('dash-subtitle').textContent = `Department: ${currentUser.department || currentUser.department_name || 'Engineering'} • Staff Self-Service Portal`;
     document.getElementById('attendance-title').textContent = 'My Daily Attendance';
   } else {
     document.getElementById('dash-subtitle').textContent = 'Here is the current operational and payroll status across the firm.';
@@ -175,7 +183,7 @@ async function loadDashboard() {
     tbody.innerHTML = periodsData.periods.map(p => `
       <tr>
         <td><strong>${p.period_name}</strong></td>
-        <td>${p.start_date} to ${p.end_date}</td>
+        <td>${formatDate(p.start_date)} to ${formatDate(p.end_date)}</td>
         <td>${p.total_working_days} Days</td>
         <td><span class="badge ${p.status === 'FINALIZED' ? 'badge-success' : 'badge-neutral'}">${p.status}</span></td>
         <td>
@@ -239,7 +247,7 @@ async function loadAttendanceTable() {
   const tbody = document.getElementById('attendance-table-body');
   tbody.innerHTML = data.attendance.map(a => `
     <tr>
-      <td><strong>${a.work_date}</strong></td>
+      <td><strong>${formatDate(a.work_date)}</strong></td>
       <td>${a.full_name} (${a.employee_code})</td>
       <td>
         <span class="badge ${a.status === 'PRESENT' ? 'badge-success' : (a.status === 'ON_LEAVE' ? 'badge-info' : 'badge-danger')}">
@@ -262,12 +270,13 @@ async function loadLeavesTable() {
 
   const isHR = currentUser.role === 'HR_ADMIN';
   const tbody = document.getElementById('leaves-table-body');
+  const leaves = [...data.leaves].sort((a, b) => (b.status === 'PENDING' ? 1 : 0) - (a.status === 'PENDING' ? 1 : 0));
 
-  tbody.innerHTML = data.leaves.map(l => `
+  tbody.innerHTML = leaves.map(l => `
     <tr>
       <td><strong>${l.full_name}</strong></td>
       <td><span class="badge badge-neutral">${l.leave_type}</span></td>
-      <td>${l.start_date} to ${l.end_date}</td>
+      <td>${formatDate(l.start_date)} to ${formatDate(l.end_date)}</td>
       <td>${l.total_days} Days</td>
       <td>${l.reason}</td>
       <td>
@@ -294,7 +303,7 @@ async function loadMyPayslips() {
   tbody.innerHTML = data.payrolls.map(p => `
     <tr>
       <td><strong>${p.period_name}</strong></td>
-      <td>${p.start_date} to ${p.end_date}</td>
+      <td>${formatDate(p.start_date)} to ${formatDate(p.end_date)}</td>
       <td>${p.present_days} / ${p.total_working_days}</td>
       <td>${formatMoney(p.gross_earnings)}</td>
       <td class="text-danger">${formatMoney(p.total_deductions)}</td>
@@ -388,7 +397,7 @@ async function loadLateMarksReport(periodId = 2) {
     <tr>
       <td><strong>${l.full_name}</strong> (${l.employee_code})</td>
       <td>${l.department_name}</td>
-      <td>${l.work_date}</td>
+      <td>${formatDate(l.work_date)}</td>
       <td><code>${l.check_in_time}</code></td>
       <td><span class="badge badge-warning">${l.late_minutes} min</span></td>
       <td>${l.remarks || '—'}</td>
