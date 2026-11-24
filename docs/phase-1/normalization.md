@@ -1,5 +1,8 @@
 # PayTrace — Normalization Analysis (Phase 1)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. Introduction
 
 Normalization is the systematic database design process that reduces data redundancy, eliminates update/insertion/deletion anomalies, and ensures data integrity through well-defined functional dependencies.

@@ -1,5 +1,8 @@
 # PayTrace — Entity Relationship Diagram (Phase 1)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## Overview
 
 The PayTrace relational database model consists of 9 normalized entities designed for transparency, strict data integrity, auditability, and role-based access control.

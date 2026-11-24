@@ -1,5 +1,8 @@
 # PayTrace — Engineering Limitations & Future Roadmap (Phase 5)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. Scope & Academic Disclosure
 
 PayTrace was built as an individual academic capstone project to demonstrate mastery of relational database design, stored SQL programming, transaction safety, query optimization, security, and full-stack integration within an achievable student scope.

@@ -1,5 +1,8 @@
 # PayTrace — Sample Dataset Specification (Phase 2)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. Dataset Overview
 
 The PayTrace seed dataset models a mid-sized organization across **12 employees**, **5 departments**, and **3 distinct monthly payroll cycles** (June 2026, July 2026, August 2026).

@@ -388,7 +388,7 @@ pre code {
     <div class="cover-meta-item">
       <strong>Candidate / Author</strong>
       Pulkit Pradhan<br/>
-      <span style="font-size: 8pt; color: #64748b;">GitHub: github.com/PulkitPradhan/PayTrace</span>
+      <span style="font-size: 8pt; color: #64748b;">Roll No: 2501730036 • GitHub: github.com/PulkitPradhan/PayTrace</span>
     </div>
     <div class="cover-meta-item">
       <strong>Academic Year / Term</strong>
@@ -418,7 +418,7 @@ pre code {
   <h1 class="chapter-title">Certificate of Academic Authenticity</h1>
   <p><em>(Template requiring authorized institutional completion)</em></p>
   <p>
-    This is to certify that the capstone project report entitled <strong>"PayTrace: Payroll &amp; Attendance Management System"</strong>, submitted by <strong>Pulkit Pradhan</strong> in partial fulfillment of the requirements for the degree of <strong>[Bachelor of Technology in Computer Science &amp; Engineering / Equivalent Degree]</strong>, is an authentic record of academic engineering work conducted during the 2025–2026 academic year.
+    This is to certify that the capstone project report entitled <strong>"PayTrace: Payroll &amp; Attendance Management System"</strong>, submitted by <strong>Pulkit Pradhan</strong> (Roll No: 2501730036) in partial fulfillment of the requirements for the degree of <strong>[Bachelor of Technology in Computer Science &amp; Engineering / Equivalent Degree]</strong>, is an authentic record of academic engineering work conducted during the 2025–2026 academic year.
   </p>
   <p>
     The relational data modeling (3NF/BCNF), procedural business logic (stored routines and validation triggers), analytical query optimization, role-based access control, and full-stack implementation presented in this document represent the verified technical work of the candidate.
@@ -455,6 +455,7 @@ pre code {
     <div class="signature-box" style="margin-top: 35pt;">
       <div class="sig-line">
         <strong>Pulkit Pradhan</strong><br/>
+        Roll No: 2501730036<br/>
         Candidate / Lead Engineer<br/>
         Date: November 18, 2026
       </div>
@@ -949,9 +950,9 @@ pre code {
   </ul>
 
   <div class="callout callout-info">
-    <strong>Authoritative Reconciliation of Previous Audit Note:</strong><br/>
-    An earlier informal audit report hypothesized Sarah's deductions as PF: \$6,550.00 and TDS: \$7,500.00 (summing to \$14,050.00).<br/>
-    <strong>Verified Finding:</strong> Direct query of MariaDB (<code>payroll_items</code>) and UI screenshot <code>08-itemized-salary-slip.png</code> confirms that the database and UI match: PF is \$7,800.00 (12% of \$65,000), and TDS is \$6,250.00 (10% Tier 3), yielding the same \$14,050.00 combined subtotal and identical \$79,228.25 net take-home salary.
+    <strong>Statutory Deduction Calculation Verification:</strong><br/>
+    Sarah's itemized deductions in July 2026 comprise: Basic PF: \$7,800.00 (12% of basic), Professional Tax: \$200.00, Late Penalty: \$6,521.75 (3 excess late marks), and TDS Income Tax: \$6,250.00 (10% Tier 3 bracket).<br/>
+    <strong>Verified Finding:</strong> Direct query of MariaDB (<code>payroll_items</code>) and UI screenshot <code>08-itemized-salary-slip.png</code> confirms that both the database records and payslip voucher yield this exact \$20,771.75 total deduction, arriving at the verified \$79,228.25 net take-home pay.
   </div>
 </div>
 
@@ -1391,7 +1392,7 @@ async function generatePDF() {
           printBackground: true,
           displayHeaderFooter: true,
           headerTemplate: '<div style="font-size: 7.5pt; font-family: -apple-system, sans-serif; width: 100%; display: flex; justify-content: space-between; padding: 0 18mm; color: #64748b; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px;"><span>PayTrace: Academic Capstone Project Report</span><span>Payroll & Attendance Management System</span></div>',
-          footerTemplate: '<div style="font-size: 7.5pt; font-family: -apple-system, sans-serif; width: 100%; display: flex; justify-content: space-between; padding: 0 18mm; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 4px;"><span>Confidential Academic Capstone Report • Repository: github.com/PulkitPradhan/PayTrace</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>'
+          footerTemplate: '<div style="font-size: 7.5pt; font-family: -apple-system, sans-serif; width: 100%; display: flex; justify-content: space-between; padding: 0 18mm; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 4px;"><span>Confidential Academic Capstone Report • Pulkit Pradhan (2501730036) • github.com/PulkitPradhan/PayTrace</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>'
         }, sessionId);
 
         if (pdf.result && pdf.result.data) {

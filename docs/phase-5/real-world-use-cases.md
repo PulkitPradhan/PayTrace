@@ -1,5 +1,8 @@
 # PayTrace — Real-World Enterprise Scalability & Use Cases (Phase 5)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. Overview
 
 While PayTrace was engineered and verified as a single-student academic capstone project for 12 employees across 3 months, its relational schema, transaction boundaries, and procedural architecture were deliberately designed around industrial database principles.

@@ -1,5 +1,8 @@
 # PayTrace — Comprehensive Test Plan (Phase 4)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. Overview & Scope
 
 The PayTrace Test Plan verifies system functionality, security isolation, constraint enforcement, calculation precision, and transaction boundaries across 20 mandatory test cases defined by the academic rubric.

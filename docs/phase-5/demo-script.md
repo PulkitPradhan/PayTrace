@@ -1,5 +1,8 @@
 # PayTrace — Academic Evaluation & Demonstration Script (Phase 5)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. Overview for Evaluator / Professor
 
 This script provides a structured, verifiable demonstration sequence designed to prove compliance with all five phases of the PayTrace Capstone Specification (100 Marks total).

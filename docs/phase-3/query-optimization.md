@@ -1,5 +1,8 @@
 # PayTrace — Query Optimization & Indexing Analysis (Phase 3)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. Executive Summary
 
 This study documents the database indexing analysis and execution-plan optimization conducted on the PayTrace relational database.

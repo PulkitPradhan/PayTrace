@@ -1,5 +1,8 @@
 # PayTrace — Security & Access Control Model (Phase 4)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. Overview & Security Philosophy
 
 The PayTrace platform is designed with defense-in-depth, enforcing role-based access control (RBAC), data isolation, transaction safety, and auditability at both the database and application layers.

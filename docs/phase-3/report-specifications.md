@@ -1,5 +1,8 @@
 # PayTrace — Report Specifications & Sample Outputs (Phase 3)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. Overview
 
 Phase 3 implements the mandatory operational and financial reporting queries for PayTrace. All reports execute against the normalized Phase 1 schema and Phase 2 seed dataset without fabricated data or Cartesian inflation.

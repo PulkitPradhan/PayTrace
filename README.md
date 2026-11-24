@@ -5,7 +5,7 @@
 [![Tests](https://img.shields.io/badge/Tests-20%2F20%20Passing-success)](tests/test_suite.js)
 [![Academic Evaluation](https://img.shields.io/badge/Capstone-100%20Marks%20Rubric-blue)](#academic-phase-structure)
 
-**PayTrace** is a transparent, auditable, and transaction-safe Payroll & Attendance Management System built as an individual academic capstone project. It demonstrates relational schema modeling (3NF/BCNF), procedural SQL calculations, query optimization, role-based security isolation, transaction safety (COMMIT / ROLLBACK), and full-stack web integration.
+**PayTrace** is a transparent, auditable, and transaction-safe Payroll & Attendance Management System built as an individual academic capstone project by **Pulkit Pradhan** (Roll No: **2501730036**). It demonstrates relational schema modeling (3NF/BCNF), procedural SQL calculations, query optimization, role-based security isolation, transaction safety (COMMIT / ROLLBACK), and full-stack web integration.
 
 ---
 

@@ -1,5 +1,8 @@
 # PayTrace — Application User Guide (Phase 5)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. Introduction
 
 **PayTrace** is a full-stack, relational database-driven Payroll & Attendance Management System designed to ensure explainable salaries, audit transparency, strict role-based access control, and transaction safety.

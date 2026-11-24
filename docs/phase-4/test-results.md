@@ -1,5 +1,8 @@
 # PayTrace — Test Results & Verification Evidence (Phase 4)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. Executive Summary
 
 - **Total Test Cases:** 20
@@ -7,6 +10,7 @@
 - **Failed:** 0 (0%)
 - **Test Engine:** Automated Jest-style Node.js verification script (`tests/test_suite.js`)
 - **Execution Date:** 2026-11-18
+- **Tester / Candidate:** Pulkit Pradhan (Roll No: 2501730036)
 - **Database:** MariaDB 13.0.2 / InnoDB
 
 ---

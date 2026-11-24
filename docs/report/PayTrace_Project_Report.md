@@ -4,6 +4,7 @@
 **Project Title:** PayTrace: Transparent, Auditable, and Transaction-Safe Payroll & Attendance Management Platform  
 **Academic Theme:** Payroll & Attendance Management System  
 **Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
 **Repository:** [https://github.com/PulkitPradhan/PayTrace](https://github.com/PulkitPradhan/PayTrace)  
 **Academic Institution:** [Institution / University Name Placeholder]  
 **Department / Degree:** [Department of Computer Science & Engineering / Bachelor of Technology Placeholder]  
@@ -19,7 +20,7 @@
 
 *(Template requiring authorized institutional completion)*
 
-This is to certify that the project report entitled **"PayTrace: Payroll & Attendance Management System"**, submitted by **Pulkit Pradhan** in partial fulfillment of the requirements for the award of the degree of **[Bachelor of Technology in Computer Science & Engineering / Equivalent Degree]**, is a bona fide record of work carried out under my supervision and guidance during the academic year 2025–2026.
+This is to certify that the project report entitled **"PayTrace: Payroll & Attendance Management System"**, submitted by **Pulkit Pradhan** (Roll No: 2501730036) in partial fulfillment of the requirements for the award of the degree of **[Bachelor of Technology in Computer Science & Engineering / Equivalent Degree]**, is a bona fide record of work carried out under my supervision and guidance during the academic year 2025–2026.
 
 The database design, stored SQL procedures, web backend architecture, security controls, query optimizations, and evaluation testing presented in this report represent the independent engineering work of the candidate, except where explicitly referenced.
 
@@ -50,7 +51,7 @@ I affirm that:
 <br/><br/>
 _______________________________________  
 **Pulkit Pradhan**  
-*[Student Identification Number / Roll Number Placeholder]*  
+**Roll No:** 2501730036  
 *Department of Computer Science & Engineering*  
 *[Institution / University Name]*  
 
@@ -511,11 +512,10 @@ A pivotal architectural achievement of PayTrace is historical snapshot preservat
 - **Net Salary:**
   $$\text{Net Salary} = \$100,000.00 - \$20,771.75 = \mathbf{\$79,228.25}$$
 
-> [!IMPORTANT]
-> **Reconciliation of Prior Audit Narrative Discrepancy:**  
-> An earlier informal audit narrative hypothesized Sarah's deductions as: $\text{PF } \$6,550 + \text{TDS } \$7,500 + \text{PT } \$200 + \text{Late } \$6,521.75 = \$20,771.75$.  
-> While the total deductions (\$20,771.75) and net pay (\$79,228.25) were identical, the individual split between PF and TDS differed.  
-> **Authoritative Database Resolution:** Inspection of `database/seed.sql` and `database/functions.sql` proves that the database records and UI screenshot `08-itemized-salary-slip.png` represent the true implementation: PF is configured as \$7,800.00 (12% statutory basic), and TDS is computed as \$6,250.00 by `fn_calculate_monthly_tds(1200000.00)`. The prior informal note had mentally assumed a 15% bracket, whereas the actual SQL code enforces 10% on the third tier.
+> [!NOTE]
+> **Statutory Deduction Calculation Verification:**  
+> Sarah's itemized deductions in July 2026 comprise: $\text{Basic PF } \$7,800.00 \text{ (12% of basic)} + \text{Professional Tax } \$200.00 + \text{Late Penalty } \$6,521.75 \text{ (3 excess late marks)} + \text{TDS Income Tax } \$6,250.00 \text{ (10% Tier 3 bracket)} = \$20,771.75$.  
+> **Authoritative Database Consistency:** Verification against `database/seed.sql`, `database/functions.sql`, and UI screenshot `08-itemized-salary-slip.png` confirms that both the database records and payslip voucher yield this exact \$20,771.75 total deduction, arriving at the verified \$79,228.25 net take-home pay.
 
 #### Case B: Liam Patel (`EMP008`) — June 2026 (Unpaid Leave Deduction)
 - **Salary Profile:** Basic: \$62,000.00, HRA: \$24,800.00 (40%), Special: \$10,200.00 $\implies$ **Gross = \$97,000.00**

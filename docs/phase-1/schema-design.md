@@ -1,5 +1,8 @@
 # PayTrace — Schema Design Specification & Data Dictionary (Phase 1)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. System Overview & Core Philosophy
 
 **PayTrace** is a transparent, auditable, and transaction-safe Payroll & Attendance Management System built for an enterprise environment. It addresses three critical challenges in organizational management:

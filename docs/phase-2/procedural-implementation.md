@@ -1,5 +1,8 @@
 # PayTrace — Procedural Implementation Specification (Phase 2)
 
+**Author:** Pulkit Pradhan  
+**Roll Number:** 2501730036  
+
 ## 1. Overview
 
 Phase 2 implements the approved Phase 1 relational schema through procedural database programming. All business rules—salary computation, statutory deductions, progressive TDS, leave conflict detection, attendance validation, transaction boundaries, and audit logging—are enforced inside the database engine.
