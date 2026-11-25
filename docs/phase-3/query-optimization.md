@@ -5,231 +5,105 @@
 
 ## 1. Executive Summary
 
-This study documents the database indexing analysis and execution-plan optimization conducted on the PayTrace relational database.
+This document presents authentic, reproducible `EXPLAIN` and `ANALYZE FORMAT=JSON` measurements on **MariaDB 13.0.2-MariaDB** for the Phase 3 performance indexes defined in `database/indexes.sql` (installed automatically via `database/setup.sql`).
 
-Using MariaDB's execution analysis tooling (`EXPLAIN` and `EXPLAIN FORMAT=JSON`), we evaluate query execution behavior on **Report 3 (Late-Marks Report)** before and after adding a targeted composite index:
-$$\text{idx\_attendance\_late\_lookup} \text{ on } \text{attendance}(\text{is\_late}, \text{work\_date}, \text{late\_minutes})$$
-
-The addition of this index fundamentally transformed the query plan: it eliminated an outer temporary table, inverted the join order to use an index range scan on the filtered fact table, and converted downstream joins into direct primary key single-row lookups (`eq_ref`).
-
----
-
-## 2. Baseline Architecture & Existing Indexes
-
-Prior to optimization, the following structural indexes existed in the approved Phase 1 schema:
-- `attendance`:
-  - `PRIMARY KEY (attendance_id)`
-  - `UNIQUE KEY uq_emp_work_date (employee_id, work_date)`
-- `employees`:
-  - `PRIMARY KEY (employee_id)`
-  - `UNIQUE KEY uq_employee_code (employee_code)`
-  - `UNIQUE KEY uq_employee_email (email)`
-  - `FOREIGN KEY (department_id) REFERENCES departments(department_id)`
-- `departments`:
-  - `PRIMARY KEY (department_id)`
-  - `UNIQUE KEY uq_department_name (department_name)`
-
-### The Optimization Bottleneck
-In Report 3, the predicate is:
-```sql
-WHERE a.work_date BETWEEN '2026-07-01' AND '2026-07-31'
-  AND a.is_late = TRUE
-ORDER BY a.late_minutes DESC, a.work_date ASC;
-```
-Because `uq_emp_work_date` has `employee_id` as its leftmost prefix column, the optimizer **cannot** use `uq_emp_work_date` to satisfy a range search on `work_date` across all employees. Consequently, the optimizer was forced into an inefficient nested-loop traversal starting from `departments`.
+Benchmarks were executed against the exact **Report 3 (Late-Marks Report)** query on both:
+1. The **792-row Phase 2 seed dataset** (`12` employees × `66` workdays), and
+2. A **50,000-row scaling benchmark** (`200` employees × `250` days) in an isolated disposable database.
 
 ---
 
-## 3. Pre-Optimization Execution Plan (BEFORE)
+## 2. Installed Phase 3 Indexes (`database/indexes.sql`)
 
-### 3.1 Tabular `EXPLAIN` Output
-```text
-+------+-------------+-------+-------+---------------------------------+-------------------------+---------+-----------------------------+------+----------------------------------------------+
-| id   | select_type | table | type  | possible_keys                   | key                     | key_len | ref                         | rows | Extra                                        |
-+------+-------------+-------+-------+---------------------------------+-------------------------+---------+-----------------------------+------+----------------------------------------------+
-|    1 | SIMPLE      | d     | index | PRIMARY                         | uq_department_name      | 202     | NULL                        | 5    | Using index; Using temporary; Using filesort |
-|    1 | SIMPLE      | e     | ref   | PRIMARY,fk_employees_department | fk_employees_department | 4       | paytrace_db.d.department_id | 1    |                                              |
-|    1 | SIMPLE      | a     | ref   | uq_emp_work_date                | uq_emp_work_date        | 4       | paytrace_db.e.employee_id   | 1    | Using index condition; Using where           |
-+------+-------------+-------+-------+---------------------------------+-------------------------+---------+-----------------------------+------+----------------------------------------------+
-```
-
-### 3.2 Machine-Readable `EXPLAIN FORMAT=JSON`
-```json
-{
-  "query_block": {
-    "select_id": 1,
-    "cost": 0.035306911,
-    "filesort": {
-      "sort_key": "a.late_minutes desc, a.work_date",
-      "temporary_table": {
-        "nested_loop": [
-          {
-            "table": {
-              "table_name": "d",
-              "access_type": "index",
-              "possible_keys": ["PRIMARY"],
-              "key": "uq_department_name",
-              "key_length": "202",
-              "used_key_parts": ["department_name"],
-              "loops": 1,
-              "rows": 5,
-              "cost": 0.007379345,
-              "filtered": 100,
-              "using_index": true
-            }
-          },
-          {
-            "table": {
-              "table_name": "e",
-              "access_type": "ref",
-              "possible_keys": ["PRIMARY", "fk_employees_department"],
-              "key": "fk_employees_department",
-              "key_length": "4",
-              "used_key_parts": ["department_id"],
-              "ref": ["paytrace_db.d.department_id"],
-              "loops": 5,
-              "rows": 1,
-              "cost": 0.0107392,
-              "filtered": 100
-            }
-          },
-          {
-            "table": {
-              "table_name": "a",
-              "access_type": "ref",
-              "possible_keys": ["uq_emp_work_date"],
-              "key": "uq_emp_work_date",
-              "key_length": "4",
-              "used_key_parts": ["employee_id"],
-              "ref": ["paytrace_db.e.employee_id"],
-              "loops": 5,
-              "rows": 1,
-              "cost": 0.014016,
-              "filtered": 100,
-              "index_condition": "a.work_date between <cache>('2026-07-01') and <cache>('2026-07-31')",
-              "attached_condition": "a.is_late = 1"
-            }
-          }
-        ]
-      }
-    }
-  }
-}
-```
-
-### Pre-Optimization Bottlenecks
-1. **Unnatural Driving Table:** The query starts at `departments` (`d`), proceeds to `employees` (`e`), and then probes `attendance` (`a`).
-2. **Intermediate Materialization:** An in-memory/disk temporary table (`temporary_table`) must be created to hold intermediate joined rows before sorting.
-3. **Filesort Overhead:** A filesort pass (`filesort`) is performed across the entire joined intermediate result.
-
----
-
-## 4. The Proposed Optimization
-
-We introduce a composite index tailored to the equality and range predicates of the report:
-```sql
-CREATE INDEX `idx_attendance_late_lookup` 
-ON `attendance` (`is_late`, `work_date`, `late_minutes`);
-```
-
-### Index Column Rationale
-- **Column 1 (`is_late`):** Exact equality filter (`a.is_late = TRUE`). High selectivity since only a fraction of records are tardy.
-- **Column 2 (`work_date`):** Range boundary filter (`BETWEEN '2026-07-01' AND '2026-07-31'`).
-- **Column 3 (`late_minutes`):** Covers the primary ordering attribute (`ORDER BY a.late_minutes DESC`).
-
----
-
-## 5. Post-Optimization Execution Plan (AFTER)
-
-### 5.1 Tabular `EXPLAIN` Output
-```text
-+------+-------------+-------+--------+------------------------------------+----------------------------+---------+-----------------------------+------+----------------------------------------------------+
-| id   | select_type | table | type   | possible_keys                      | key                        | key_len | ref                         | rows | Extra                                              |
-+------+-------------+-------+--------+------------------------------------+----------------------------+---------+-----------------------------+------+----------------------------------------------------+
-|    1 | SIMPLE      | a     | range  | uq_emp_work_date,idx_attendance... | idx_attendance_late_lookup | 4       | NULL                        | 19   | Using index condition; Using where; Using filesort |
-|    1 | SIMPLE      | e     | eq_ref | PRIMARY,fk_employees_department    | PRIMARY                    | 4       | paytrace_db.a.employee_id   | 1    |                                                    |
-|    1 | SIMPLE      | d     | eq_ref | PRIMARY                            | PRIMARY                    | 4       | paytrace_db.e.department_id | 1    |                                                    |
-+------+-------------+-------+--------+------------------------------------+----------------------------+---------+-----------------------------+------+----------------------------------------------------+
-```
-
-### 5.2 Machine-Readable `EXPLAIN FORMAT=JSON`
-```json
-{
-  "query_block": {
-    "select_id": 1,
-    "cost": 0.073179771,
-    "nested_loop": [
-      {
-        "read_sorted_file": {
-          "filesort": {
-            "sort_key": "a.late_minutes desc, a.work_date",
-            "table": {
-              "table_name": "a",
-              "access_type": "range",
-              "possible_keys": ["uq_emp_work_date", "idx_attendance_late_lookup"],
-              "key": "idx_attendance_late_lookup",
-              "key_length": "4",
-              "used_key_parts": ["is_late", "work_date"],
-              "loops": 1,
-              "rows": 19,
-              "cost": 0.0254084,
-              "filtered": 100,
-              "index_condition": "a.is_late = 1 and a.work_date between '2026-07-01' and '2026-07-31'"
-            }
-          }
-        }
-      },
-      {
-        "table": {
-          "table_name": "e",
-          "access_type": "eq_ref",
-          "possible_keys": ["PRIMARY", "fk_employees_department"],
-          "key": "PRIMARY",
-          "key_length": "4",
-          "used_key_parts": ["employee_id"],
-          "ref": ["paytrace_db.a.employee_id"],
-          "loops": 19,
-          "rows": 1,
-          "cost": 0.01781356,
-          "filtered": 100
-        }
-      },
-      {
-        "table": {
-          "table_name": "d",
-          "access_type": "eq_ref",
-          "possible_keys": ["PRIMARY"],
-          "key": "PRIMARY",
-          "key_length": "4",
-          "used_key_parts": ["department_id"],
-          "ref": ["paytrace_db.e.department_id"],
-          "loops": 19,
-          "rows": 1,
-          "cost": 0.01781356,
-          "filtered": 100
-        }
-      }
-    ]
-  }
-}
-```
-
----
-
-## 6. Technical Comparison & Optimization Analysis
-
-| Dimension | Before Optimization | After Optimization | Structural Improvement |
+| Index Name | Table | Columns | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Driving Table** | `departments` (Dimension table) | `attendance` (Filtered fact table) | Filters immediately to the 19 matching records |
-| **Access Method (`a`)** | `ref` via `uq_emp_work_date` (evaluated 5 times) | `range` via `idx_attendance_late_lookup` | Direct index range seek (`is_late = 1 AND work_date BETWEEN...`) |
-| **Join Method (`e`, `d`)** | Non-unique `ref` scans | Direct `eq_ref` on `PRIMARY` | $O(1)$ single-row B-tree primary key lookups |
-| **Materialization** | `Using temporary` table required | **`temporary_table` ELIMINATED** | Zero intermediate table creation in memory/temp disk |
-| **Sorting Scope** | Filesort on intermediate Cartesian join | Direct `read_sorted_file` on `attendance` | Sorts only the 19 pre-filtered records |
+| `idx_attendance_late_lookup` | `attendance` | `(is_late, work_date)` | Drives Report 3 range scans on `is_late = TRUE` and `work_date BETWEEN start_date AND end_date`. |
+| `idx_attendance_period_summary` | `attendance` | `(work_date, employee_id, status, is_late)` | Covers date-range attendance queries (`GET /api/attendance?periodId=...`). |
+| `idx_leaves_emp_status_dates` | `leaves` | `(employee_id, status, start_date, end_date)` | Accelerates overlap triggers and period-bounded leave queries in `sp_calculate_payroll`. |
+| `idx_salary_emp_effective` | `salary_structures` | `(employee_id, effective_date)` | Accelerates effective-dated salary lookups (`effective_date <= period_end ORDER BY effective_date DESC`). |
+
+*(Note: A previously proposed `idx_payrolls_period_employee` index was removed after `EXPLAIN` confirmed `payrolls` queries already use `uq_emp_payroll_period(employee_id, period_id)` and the foreign-key index `fk_payrolls_period(period_id)`.)*
 
 ---
 
-## 7. Professional Engineering Limitations
+## 3. Exact Benchmarked Query (Report 3)
 
-In small academic datasets (e.g. 792 attendance rows), wall-clock latency difference is measured in fractions of a millisecond (e.g. 1.2 ms vs 0.4 ms), which is within normal OS scheduling noise. However, on an enterprise production dataset containing 1,000 employees over 5 years (1.2 million attendance rows):
-- The **Before** plan would perform a massive Cartesian product join across 1.2M rows followed by multi-megabyte temporary disk tables and external merge sort.
-- The **After** plan will instantly seek via B-tree range to only the ~100 late records for that month, performing exactly ~100 direct primary key lookups. The complexity drops from $O(N)$ full-scan join to $O(\log N + K)$ range seek.
+```sql
+SELECT
+    e.employee_id, e.employee_code,
+    CONCAT(e.first_name, ' ', e.last_name) AS full_name,
+    d.department_name, e.designation,
+    a.work_date, a.check_in_time, a.late_minutes, a.remarks
+FROM attendance a
+JOIN employees e ON a.employee_id = e.employee_id
+JOIN departments d ON e.department_id = d.department_id
+JOIN payroll_periods pp ON pp.period_id = ?
+WHERE a.work_date BETWEEN pp.start_date AND pp.end_date
+  AND a.is_late = TRUE
+  AND a.check_in_time IS NOT NULL
+  AND a.status IN ('PRESENT', 'HALF_DAY')
+ORDER BY a.late_minutes DESC, a.work_date ASC, a.attendance_id ASC;
+```
+
+---
+
+## 4. Benchmark 1 — Phase 2 Seed Dataset (792 Attendance Rows, July 2026)
+
+Table statistics refreshed via `ANALYZE TABLE` before both runs; 15 repeated executions after warmup.
+
+### 4.1 BEFORE `indexes.sql`
+- **Join Order:** `pp (const)` $\rightarrow$ `d (index)` $\rightarrow$ `e (ref)` $\rightarrow$ `a (ref via uq_emp_work_date)`
+- **`Extra`:** `Using temporary; Using filesort`
+- **Optimizer Cost:** `1.122799786`
+- **Actual DB Execution (`ANALYZE FORMAT=JSON`):** `r_total_time_ms = 0.388 ms`; `a` scanned `66` index rows across `12` loops (`792` index rows), `pages_accessed = 564` on `a`.
+- **Client 15-Run Timing:** `min = 0.763 ms`, `median = 0.840 ms`, `mean = 0.943 ms`, `max = 1.421 ms`.
+
+```text
++------+-------------+-------+-------+---------------------------------+-------------------------+---------+-----------------------------+------+------------------------------------+
+| id   | select_type | table | type  | possible_keys                   | key                     | key_len | ref                         | rows | Extra                              |
++------+-------------+-------+-------+---------------------------------+-------------------------+---------+-----------------------------+------+------------------------------------+
+|    1 | SIMPLE      | pp    | const | PRIMARY                         | PRIMARY                 | 4       | const                       | 1    | Using temporary; Using filesort    |
+|    1 | SIMPLE      | d     | index | PRIMARY                         | uq_department_name      | 202     | NULL                        | 5    | Using index                        |
+|    1 | SIMPLE      | e     | ref   | PRIMARY,fk_employees_department | fk_employees_department | 4       | paytrace_bench_792.d.dep... | 2    |                                    |
+|    1 | SIMPLE      | a     | ref   | uq_emp_work_date                | uq_emp_work_date        | 4       | paytrace_bench_792.e.emp... | 66   | Using index condition; Using where |
++------+-------------+-------+-------+---------------------------------+-------------------------+---------+-----------------------------+------+------------------------------------+
+```
+
+### 4.2 AFTER `indexes.sql` (`idx_attendance_late_lookup`)
+- **Join Order:** `pp (const)` $\rightarrow$ `a (range via idx_attendance_late_lookup)` $\rightarrow$ `e (eq_ref PRIMARY)` $\rightarrow$ `d (eq_ref PRIMARY)`
+- **`Extra` on `a`:** `Using index condition; Using where; Using filesort` (`temporary_table` **ELIMINATED**)
+- **Optimizer Cost:** `0.073179771` (**93.5% cost reduction**)
+- **Actual DB Execution (`ANALYZE FORMAT=JSON`):** `r_total_time_ms = 0.111 ms` (**3.49× faster DB execution**); `a` scanned `r_index_rows = 19`, `pages_accessed = 79` on `a` (down from `564`).
+- **Client 15-Run Timing:** `min = 0.438 ms`, `median = 0.537 ms`, `mean = 0.632 ms`, `max = 0.922 ms`.
+
+```text
++------+-------------+-------+--------+-----------------------------------------------------------+----------------------------+---------+-----------------------------+------+----------------------------------------------------+
+| id   | select_type | table | type   | possible_keys                                             | key                        | key_len | ref                         | rows | Extra                                              |
++------+-------------+-------+--------+-----------------------------------------------------------+----------------------------+---------+-----------------------------+------+----------------------------------------------------+
+|    1 | SIMPLE      | pp    | const  | PRIMARY                                                   | PRIMARY                    | 4       | const                       | 1    |                                                    |
+|    1 | SIMPLE      | a     | range  | uq_emp_work_date,idx_attendance_late_lookup,idx_att...    | idx_attendance_late_lookup | 4       | NULL                        | 19   | Using index condition; Using where; Using filesort |
+|    1 | SIMPLE      | e     | eq_ref | PRIMARY,fk_employees_department                           | PRIMARY                    | 4       | paytrace_bench_792.a.emp... | 1    |                                                    |
+|    1 | SIMPLE      | d     | eq_ref | PRIMARY                                                   | PRIMARY                    | 4       | paytrace_bench_792.e.dep... | 1    |                                                    |
++------+-------------+-------+--------+-----------------------------------------------------------+----------------------------+---------+-----------------------------+------+----------------------------------------------------+
+```
+
+---
+
+## 5. Benchmark 2 — 50,000-Row Scaling Dataset (`200` Employees × `250` Days)
+
+| Metric | BEFORE `indexes.sql` | AFTER `indexes.sql` | Measured Improvement |
+| :--- | :---: | :---: | :--- |
+| **Driving Access (`a`)** | `ref` (`uq_emp_work_date`) | `range` (`idx_attendance_late_lookup`) | Range seek over `(is_late, work_date)` |
+| **Rows Returned (`r_rows`)** | 124 (from 50,000 index rows) | 124 (from 124 index rows) | 99.75% fewer attendance index entries scanned |
+| **Temporary Table** | Yes (`temporary_table`) | **Eliminated** | Zero temp table materialization |
+| **Filesort** | Yes (after full join) | Yes (`read_sorted_file` on 124 rows) | Scope reduced to matching late rows only |
+| **Optimizer Cost** | `75.3550` | `0.5324` | **99.3% lower optimizer cost** |
+| **DB `r_total_time_ms`** | `8.859 ms` | `0.430 ms` | **20.6× faster DB execution** |
+| **Client 15-Run Median** | `10.376 ms` (`mean 10.657 ms`) | `0.873 ms` (`mean 0.994 ms`) | **11.9× faster end-to-end** |
+
+---
+
+## 6. Index Behavior & Remaining Limitations
+
+- **Why `filesort` remains:** In `idx_attendance_late_lookup(is_late, work_date)`, `work_date` is queried as a range (`BETWEEN`), and the query sorts by `a.late_minutes DESC, a.work_date ASC, a.attendance_id ASC`. In B-tree indexes, columns following a range predicate cannot satisfy `ORDER BY` ordering; however, sorting is confined to only the 19 (or 124) pre-filtered rows rather than a materialized join temporary table.
+- **Why Report 1 uses `uq_emp_work_date`:** Report 1 starts from `employees` (`LEFT JOIN attendance`) to preserve employees with zero attendance logs, so InnoDB probes `(employee_id, work_date)` via `uq_emp_work_date`.

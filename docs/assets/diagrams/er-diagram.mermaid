@@ -3,13 +3,13 @@ erDiagram
     EMPLOYEES ||--o{ SALARY_STRUCTURES : "has (ON DELETE CASCADE)"
     EMPLOYEES ||--o{ ATTENDANCE : "logs (ON DELETE CASCADE)"
     EMPLOYEES ||--o{ LEAVES : "submits (ON DELETE CASCADE)"
-    EMPLOYEES ||--o{ LEAVES : "actions [approver] (ON DELETE SET NULL)"
+    EMPLOYEES |o--o{ LEAVES : "actions [approver] (ON DELETE SET NULL)"
     EMPLOYEES ||--o{ PAYROLLS : "receives (ON DELETE RESTRICT)"
     EMPLOYEES ||--o{ PAYROLLS : "processes [HR admin] (ON DELETE RESTRICT)"
     PAYROLL_PERIODS ||--o{ PAYROLLS : "contains (ON DELETE RESTRICT)"
     SALARY_STRUCTURES ||--o{ PAYROLLS : "snapshot_referenced_in (ON DELETE RESTRICT)"
-    PAYROLLS ||--|{ PAYROLL_ITEMS : "breaks_down_into (ON DELETE CASCADE)"
-    EMPLOYEES ||--o{ AUDIT_LOGS : "triggers [actor] (ON DELETE SET NULL)"
+    PAYROLLS ||--o{ PAYROLL_ITEMS : "breaks_down_into (ON DELETE CASCADE)"
+    EMPLOYEES |o--o{ AUDIT_LOGS : "triggers [actor] (ON DELETE SET NULL)"
 
     DEPARTMENTS {
         int department_id PK "INT AUTO_INCREMENT"

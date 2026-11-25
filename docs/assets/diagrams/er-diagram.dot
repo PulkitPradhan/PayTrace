@@ -110,7 +110,7 @@ digraph PayTrace_ERD {
             <tr><td bgcolor="#059669" colspan="3" align="center"><font color="#FFFFFF"><b>attendance</b></font></td></tr>
             <tr bgcolor="#F8FAFC"><td colspan="3" align="center"><font color="#64748B" point-size="8">Daily Time &amp; Late-Mark Tracking</font></td></tr>
             <tr><td align="left" port="att_id"><font color="#D97706"><b>PK</b></font></td><td align="left"><b>attendance_id</b></td><td align="right"><font color="#64748B">INT AUTO</font></td></tr>
-            <tr><td align="left" port="emp_fk"><font color="#2563EB"><b>FK</b></font></td><td align="left"><font color="#1D4ED8">employee_id</font></td><td align="right"><font color="#64748B">INT [UK 1/2]</font></td></tr>
+            <tr><td align="left" port="emp_fk"><font color="#2563EB"><b>FK</b></font> <font color="#7C3AED"><b>UK</b></font></td><td align="left"><font color="#1D4ED8">employee_id</font></td><td align="right"><font color="#64748B">INT [UK 1/2]</font></td></tr>
             <tr><td align="left"><font color="#7C3AED"><b>UK</b></font></td><td align="left">work_date</td><td align="right"><font color="#64748B">DATE [UK 2/2]</font></td></tr>
             <tr><td align="left"></td><td align="left">status</td><td align="right"><font color="#64748B">ENUM('PRESENT',...)</font></td></tr>
             <tr><td align="left"></td><td align="left">check_in_time</td><td align="right"><font color="#64748B">TIME</font></td></tr>
@@ -149,8 +149,8 @@ digraph PayTrace_ERD {
             <tr><td bgcolor="#DC2626" colspan="3" align="center"><font color="#FFFFFF"><b>payrolls</b></font></td></tr>
             <tr bgcolor="#F8FAFC"><td colspan="3" align="center"><font color="#64748B" point-size="8">Finalized Salary Master Snapshot</font></td></tr>
             <tr><td align="left" port="payroll_id"><font color="#D97706"><b>PK</b></font></td><td align="left"><b>payroll_id</b></td><td align="right"><font color="#64748B">INT AUTO</font></td></tr>
-            <tr><td align="left" port="emp_fk"><font color="#2563EB"><b>FK</b></font></td><td align="left"><font color="#1D4ED8">employee_id</font></td><td align="right"><font color="#64748B">INT [UK 1/2]</font></td></tr>
-            <tr><td align="left" port="period_fk"><font color="#2563EB"><b>FK</b></font></td><td align="left"><font color="#1D4ED8">period_id</font></td><td align="right"><font color="#64748B">INT [UK 2/2]</font></td></tr>
+            <tr><td align="left" port="emp_fk"><font color="#2563EB"><b>FK</b></font> <font color="#7C3AED"><b>UK</b></font></td><td align="left"><font color="#1D4ED8">employee_id</font></td><td align="right"><font color="#64748B">INT [UK 1/2]</font></td></tr>
+            <tr><td align="left" port="period_fk"><font color="#2563EB"><b>FK</b></font> <font color="#7C3AED"><b>UK</b></font></td><td align="left"><font color="#1D4ED8">period_id</font></td><td align="right"><font color="#64748B">INT [UK 2/2]</font></td></tr>
             <tr><td align="left" port="salary_fk"><font color="#2563EB"><b>FK</b></font></td><td align="left"><font color="#1D4ED8">salary_id</font></td><td align="right"><font color="#64748B">INT (Ref Structure)</font></td></tr>
             <tr><td align="left"><font color="#B45309" point-size="7">chk</font></td><td align="left">present_days</td><td align="right"><font color="#64748B">DECIMAL(4,1)</font></td></tr>
             <tr><td align="left"></td><td align="left">approved_paid_leave_days</td><td align="right"><font color="#64748B">DECIMAL(4,1)</font></td></tr>
@@ -252,8 +252,7 @@ digraph PayTrace_ERD {
     employees:emp_id -> payrolls:proc_fk [
         label=" 1 : N (processed_by)\n [ON DELETE RESTRICT]",
         color="#DC2626",
-        fontcolor="#B91C1C",
-        style=dashed
+        fontcolor="#B91C1C"
     ];
 
     payrolls:payroll_id -> payroll_items:payroll_fk [

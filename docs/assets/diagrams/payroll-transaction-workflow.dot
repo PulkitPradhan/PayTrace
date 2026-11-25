@@ -54,20 +54,22 @@ digraph PayTrace_Workflow {
         color="#FDE68A";
         penwidth=1.2;
 
-        g1 [shape=diamond, style="filled", fillcolor="#FFFFFF", color="#F59E0B", label="1. Employee Active?\nstatus = 'ACTIVE'"];
+        g1 [shape=diamond, style="filled", fillcolor="#FFFFFF", color="#F59E0B", label="1. HR Processor &amp;\nEmployee ACTIVE?"];
         g2 [shape=diamond, style="filled", fillcolor="#FFFFFF", color="#F59E0B", label="2. Period Exists?\nperiod_id found"];
+        tx_start [shape=ellipse, style="filled", fillcolor="#EF4444", fontcolor="#FFFFFF", label="START TRANSACTION;\n(Snapshot Boundary)"];
         g3 [shape=diamond, style="filled", fillcolor="#FFFFFF", color="#F59E0B", label="3. Duplicate Check?\n(emp, period) in payrolls"];
-        g4 [shape=diamond, style="filled", fillcolor="#FFFFFF", color="#F59E0B", label="4. Active Salary Structure?\nis_active = TRUE"];
+        g4 [shape=diamond, style="filled", fillcolor="#FFFFFF", color="#F59E0B", label="4. Effective Salary?\neffective_date <= end_date"];
 
-        err_404_emp [shape=rect, style="filled,rounded", fillcolor="#FEF2F2", color="#F87171", label="Exit 404:\nEmployee inactive/absent"];
+        err_404_emp [shape=rect, style="filled,rounded", fillcolor="#FEF2F2", color="#F87171", label="Exit 403 / 404:\nActor or employee invalid"];
         err_404_per [shape=rect, style="filled,rounded", fillcolor="#FEF2F2", color="#F87171", label="Exit 404:\nPeriod not found"];
-        err_409_dup [shape=rect, style="filled,rounded", fillcolor="#FEF2F2", color="#F87171", label="Exit 409 Conflict:\nDuplicate run prevented"];
-        err_422_sal [shape=rect, style="filled,rounded", fillcolor="#FEF2F2", color="#F87171", label="Exit 422 Unprocessable:\nNo active salary found"];
+        err_409_dup [shape=rect, style="filled,rounded", fillcolor="#FEF2F2", color="#F87171", label="ROLLBACK &amp; Exit 409:\nDuplicate run prevented"];
+        err_422_sal [shape=rect, style="filled,rounded", fillcolor="#FEF2F2", color="#F87171", label="ROLLBACK &amp; Exit 422:\nNo effective salary found"];
 
         g1 -> err_404_emp [label="Fail", color="#EF4444", fontcolor="#EF4444"];
         g1 -> g2 [label="Pass", color="#16A34A"];
         g2 -> err_404_per [label="Fail", color="#EF4444", fontcolor="#EF4444"];
-        g2 -> g3 [label="Pass", color="#16A34A"];
+        g2 -> tx_start [label="Pass", color="#16A34A"];
+        tx_start -> g3 [color="#EF4444", penwidth=1.6];
         g3 -> err_409_dup [label="Exists", color="#EF4444", fontcolor="#EF4444"];
         g3 -> g4 [label="None", color="#16A34A"];
         g4 -> err_422_sal [label="Missing", color="#EF4444", fontcolor="#EF4444"];
@@ -88,8 +90,8 @@ digraph PayTrace_Workflow {
             penwidth=1.2;
 
             agg_att [shape=rect, style="filled,rounded", fillcolor="#FFFFFF", color="#38BDF8", label="Attendance Table Aggregation:\n• present_days = SUM(PRESENT:1.0, HALF_DAY:0.5)\n• late_days = SUM(is_late = TRUE)"];
-            agg_leave [shape=rect, style="filled,rounded", fillcolor="#FFFFFF", color="#38BDF8", label="Leaves Table Aggregation:\n• paid_leave_days = SUM(CASUAL, SICK, PAID)\n• unpaid_leave_days = SUM(UNPAID)"];
-            agg_absent [shape=rect, style="filled,rounded", fillcolor="#FFFFFF", color="#38BDF8", label="Absence Mark Integration:\n• unpaid_leave_days += COUNT(status = 'ABSENT')"];
+            agg_leave [shape=rect, style="filled,rounded", fillcolor="#FFFFFF", color="#38BDF8", label="Leaves Table Aggregation:\n• Cross-month prorated via fn_count_working_days()\n• Paid vs Unpaid Mon-Fri days in period"];
+            agg_absent [shape=rect, style="filled,rounded", fillcolor="#FFFFFF", color="#38BDF8", label="Absence &amp; Half-Day Integration:\n• +1.0 per unexcused ABSENT (no leave overlap)\n• +0.5 per HALF_DAY"];
 
             agg_att -> agg_leave -> agg_absent;
         }
@@ -103,9 +105,9 @@ digraph PayTrace_Workflow {
 
             calc_gross [shape=rect, style="filled,rounded", fillcolor="#FFFFFF", color="#4ADE80", label="Gross Compensation Calculation:\ngross_earnings = basic_salary + hra + special_allowance"];
             calc_daily [shape=box3d, style="filled", fillcolor="#DCFCE7", color="#22C55E", label="fn_calculate_daily_rate(gross_earnings, working_days)\ndaily_rate = ROUND(gross_earnings / working_days, 2)"];
-            calc_deductions [shape=rect, style="filled,rounded", fillcolor="#FFFFFF", color="#4ADE80", label="Deduction Evaluation:\n• unpaid_deduction = ROUND(unpaid_days * daily_rate, 2)\n• late_penalty = (late_days > 3) ? (late_days - 3) * 0.5 * daily_rate : 0.00"];
+            calc_deductions [shape=rect, style="filled,rounded", fillcolor="#FFFFFF", color="#4ADE80", label="Deduction Evaluation:\n• unpaid_deduction = ROUND(unpaid_days * daily_rate, 2)\n• late_penalty = (late_days > 3) ? ROUND((late_days - 3) * 0.5 * daily_rate, 2) : 0.00"];
             calc_tds [shape=box3d, style="filled", fillcolor="#DCFCE7", color="#22C55E", label="fn_calculate_monthly_tds(gross_earnings * 12.0)\n4 Progressive Slabs: 0% / 5% / 10% / 20%\nmonthly_tds = ROUND(annual_tax / 12.0, 2)"];
-            calc_net [shape=rect, style="filled,rounded", fillcolor="#DCFCE7", color="#16A34A", label="Net Disbursable Salary:\ntotal_deductions = pf + pt + unpaid_ded + late_pen + monthly_tds\nnet_salary = MAX(0.00, gross_earnings - total_deductions)"];
+            calc_net [shape=rect, style="filled,rounded", fillcolor="#DCFCE7", color="#16A34A", label="Net Salary &amp; Deduction Capping:\ntotal_deductions = LEAST(gross, pf + pt + tds + unpaid + late)\nnet_salary = gross_earnings - total_deductions (&ge; 0.00)"];
 
             calc_gross -> calc_daily -> calc_deductions -> calc_tds -> calc_net;
         }
@@ -122,8 +124,6 @@ digraph PayTrace_Workflow {
         color="#F87171";
         penwidth=1.8;
 
-        tx_start [shape=ellipse, style="filled", fillcolor="#EF4444", fontcolor="#FFFFFF", label="START TRANSACTION;"];
-
         tx_ins_master [shape=rect, style="filled,rounded", fillcolor="#FFFFFF", color="#DC2626", label="Step 4A: INSERT INTO payrolls\n• Master Metrics: present_days, unpaid_days, late_days\n• Financials: gross_earnings, total_deductions, net_salary\n• Audit Trigger trg_payrolls_after_insert fires &rarr; audit_logs\n• LAST_INSERT_ID() saved as p_payroll_id"];
 
         tx_ins_items [shape=rect, style="filled,rounded", fillcolor="#FFFFFF", color="#DC2626", label="Step 4B: INSERT INTO payroll_items (Itemized Breakdown)\n• EARNING: Basic Salary, HRA, Special Allowance\n• DEDUCTION: PF, PT, Unpaid Leave, Late Penalty, Income Tax (TDS)"];
@@ -134,12 +134,12 @@ digraph PayTrace_Workflow {
 
         tx_rollback [shape=rect, style="filled,rounded", fillcolor="#FEE2E2", color="#B91C1C", penwidth=2.0, label="ROLLBACK;\nDECLARE EXIT HANDLER FOR SQLEXCEPTION\nEntire transaction reverted &bull; Zero orphaned rows"];
 
-        tx_start -> tx_ins_master -> tx_ins_items -> tx_verify;
+        tx_ins_master -> tx_ins_items -> tx_verify;
         tx_verify -> tx_commit [label="Valid (No Violations)", color="#16A34A", fontcolor="#16A34A", penwidth=2.0];
         tx_verify -> tx_rollback [label="Integrity Error / Exception", color="#DC2626", fontcolor="#DC2626", penwidth=2.0, style=dashed];
     }
 
-    calc_net -> tx_start [color="#DC2626", penwidth=2.0];
+    calc_net -> tx_ins_master [color="#DC2626", penwidth=2.0];
 
     // TERMINAL NODES
     subgraph cluster_outcomes {

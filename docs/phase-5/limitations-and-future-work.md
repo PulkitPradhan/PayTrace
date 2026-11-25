@@ -1,39 +1,33 @@
-# PayTrace — Engineering Limitations & Future Roadmap (Phase 5)
+# PayTrace — Limitations & Future Enhancements (Phase 5)
 
 **Author:** Pulkit Pradhan  
 **Roll Number:** 2501730036  
 
-## 1. Scope & Academic Disclosure
+## 1. Academic Scope Framing
 
-PayTrace was built as an individual academic capstone project to demonstrate mastery of relational database design, stored SQL programming, transaction safety, query optimization, security, and full-stack integration within an achievable student scope.
-
-In accordance with strict engineering ethics, this document openly discloses the technical boundaries, simplifications, and limitations of the current implementation.
+PayTrace was developed as a university database and full-stack capstone project covering a 12-employee organization across three months (June–August 2026). While core data integrity, procedural payroll math, RBAC, CSRF/session security, and automated tests are verified, the system intentionally maintains clear academic boundaries compared to multi-tenant commercial SaaS payroll platforms.
 
 ---
 
-## 2. Identified Limitations
+## 2. Known System Limitations
 
-### 2.1 Shift Scheduling & Attendance Modeling
-- **Current Model:** Evaluates attendance against a standard organization-wide shift starting at 09:00:00 with a 15-minute grace threshold (09:15:00).
-- **Limitation:** Does not support complex rotational shift work, variable flex-time agreements, split shifts, or overnight night-shifts spanning across midnight calendar boundaries.
-
-### 2.2 Taxation & Statutory Compliance
-- **Current Model:** Implements a transparent, explainable progressive academic bracket for Income Tax (TDS), flat Professional Tax, and fixed Provident Fund contributions.
-- **Limitation:** Does not model jurisdiction-specific statutory complexities, such as local municipal tax variations, pre-tax voluntary insurance deductions, or complex tax exemptions under diverse legal codes.
-
-### 2.3 Concurrent Session Revocation
-- **Current Model:** Relies on stateless JWT tokens signed with a server secret (`JWT_SECRET`) with an 8-hour expiration window.
-- **Limitation:** Immediate token revocation upon user termination or permission downgrade requires querying the database on each request. A production deployment would introduce an in-memory distributed cache (e.g. Redis) for sub-millisecond session invalidation.
-
-### 2.4 Browser-Level Reporting vs Automated PDF Generation
-- **Current Model:** The web interface renders responsive printable HTML salary slips utilizing CSS print media stylesheets.
-- **Limitation:** Direct server-side PDF stream compilation (e.g. using headless Chromium / Puppeteer) is omitted to minimize third-party runtime binary dependencies.
+1. **Frozen Phase 1 Schema Constraints (`database/schema.sql`):**
+   - `payrolls.approved_paid_leave_days` lacks a non-negative `CHECK` constraint (`>= 0`) at the DDL level (enforced instead by `sp_calculate_payroll` and `trg_leaves_before_*`).
+   - `salary_structures` allows multiple rows for the same `(employee_id, effective_date)` because no `UNIQUE (employee_id, effective_date)` constraint was included in Phase 1; ambiguity is mitigated deterministically by ordering `(effective_date DESC, salary_id DESC)`.
+   - `audit_logs.old_values` / `new_values` are `LONGTEXT NULL` columns without a DDL `JSON_VALID()` check constraint, though triggers format valid JSON objects via `JSON_OBJECT(...)`.
+2. **Whole-Day Mon–Fri Work & Leave Calendar:**
+   - `fn_count_working_days` assumes a fixed Monday–Friday corporate week (`09:00` shift start, `15`-minute grace period) without a configurable regional public holiday table or half-day leave granularity (half-day attendance is supported on `attendance.status = 'HALF_DAY'`).
+3. **Synchronous Payroll Batch Processing:**
+   - `sp_process_bulk_payroll` iterates through employees sequentially via an SQL cursor in milliseconds for 12 employees; scaling to tens of thousands of employees would require background workers or chunked batching.
+4. **Academic Demonstration Controls:**
+   - The login screen exposes convenient quick-fill demo account buttons alongside standard email/password inputs for viva demonstration speed; a production release would remove demo autofill helpers, add MFA, password reset workflows, rate limiting, and TLS termination behind a reverse proxy.
+   - A standalone academic PDF generator (`docs/report/generate_pdf.js`) is included for capstone documentation export, while employee payslip printing uses browser print stylesheets (`window.print()`) rather than server-signed PDF binaries.
 
 ---
 
-## 3. Future Roadmap
+## 3. Future Enhancements
 
-1. **Shift Management Engine:** Introduce `shift_schedules` and `employee_shifts` entities to allow departments to configure custom shift windows and flexible lunch break intervals.
-2. **Direct Bank Interface (NACH / ACH):** Generate ISO 20022 compliant automated clearing house transaction files for batch salary disbursement.
-3. **Biometric Hardware Integration:** Provide RESTful IoT webhooks to synchronize check-in events directly from physical fingerprint and RFID card turnstiles.
-4. **Enhanced Self-Service Expense Claims:** Allow employees to submit reimbursement requests with receipt attachments that automatically integrate into the monthly payroll itemization.
+- **Holiday & Shift Rules Engine:** Add `holiday_calendar` and shift definition tables referenced by `fn_count_working_days` and `trg_attendance_before_*`.
+- **Self-Service Requests with Maker-Checker Approval:** Introduce an optional employee leave request staging workflow distinct from HR final approval if future business policies relax strict employee read-only access.
+- **Database Partitioning & Read Replicas:** Range-partition `attendance` by year and offload `reports.sql` analytics to a MariaDB replica.
+- **Tamper-Evident Audit Chain:** Extend `audit_logs` with `SHA-256` hash chaining across consecutive rows for formal regulatory auditability.

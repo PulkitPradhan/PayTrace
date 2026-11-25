@@ -115,7 +115,7 @@
 | `period_name` | VARCHAR(30) | NO | UNIQUE (`uq_period_name`) | - | Cycle label (e.g., 'August 2026') |
 | `start_date` | DATE | NO | CHECK (`start_date` <= `end_date`) | - | First calendar date of month |
 | `end_date` | DATE | NO | - | - | Last calendar date of month |
-| `total_working_days`| INT | NO | CHECK (`total_working_days` > 0) | - | Expected working days (e.g., 22) |
+| `total_working_days`| INT | NO | CHECK (`total_working_days` > 0) | - | Mon–Fri working days (e.g., 22, 23, 21) |
 | `status` | ENUM | NO | 'OPEN', 'PROCESSING', 'FINALIZED', 'CLOSED' | 'OPEN' | Accounting cycle status |
 | `created_at` | TIMESTAMP | NO | - | CURRENT_TIMESTAMP | Period initialization timestamp |
 
@@ -130,8 +130,8 @@
 | `employee_id` | INT | NO | FK -> `employees(employee_id)` | - | Employee paid (RESTRICT) |
 | `period_id` | INT | NO | FK -> `payroll_periods(period_id)` | - | Accounting cycle (RESTRICT) |
 | `salary_id` | INT | NO | FK -> `salary_structures(salary_id)` | - | Salary snapshot used (RESTRICT) |
-| `present_days` | DECIMAL(4,1) | NO | CHECK (`present_days` >= 0) | 0.0 | Days logged as PRESENT |
-| `approved_paid_leave_days` | DECIMAL(4,1) | NO | CHECK (`approved_paid_leave_days` >= 0) | 0.0 | Approved paid leave days |
+| `present_days` | DECIMAL(4,1) | NO | CHECK (`present_days` >= 0) | 0.0 | Days logged as PRESENT (+0.5 per HALF_DAY) |
+| `approved_paid_leave_days` | DECIMAL(4,1) | NO | - | 0.0 | Approved paid leave days |
 | `unpaid_leave_days` | DECIMAL(4,1) | NO | CHECK (`unpaid_leave_days` >= 0) | 0.0 | Days of unpaid leave / absence |
 | `late_days` | INT | NO | CHECK (`late_days` >= 0) | 0 | Count of late attendance days |
 | `gross_earnings`| DECIMAL(10,2)| NO | CHECK (`gross_earnings` >= 0) | - | Total earnings snapshot |
@@ -189,19 +189,19 @@ To guarantee 100% explainable, reproducible, and verifiable results, the salary 
 $$\text{Gross Standard Earnings} = B + H + S$$
 
 ### 3.2 Daily Rate Calculation
-$$\text{Daily Rate} = \frac{\text{Gross Standard Earnings}}{\text{total\_working\_days}}$$
-Where `total_working_days` is retrieved from `payroll_periods` (e.g., 22 days).
+$$\text{Daily Rate} = \text{ROUND}\left(\frac{\text{Gross Standard Earnings}}{\text{total\_working\_days}}, 2\right)$$
+Where `total_working_days` is retrieved from `payroll_periods` (e.g., 22, 23, or 21 days).
 
 ### 3.3 Deductions Policy
 1. **Statutory Deductions:**
    - **Provident Fund (PF):** Stored in `salary_structures.provident_fund`.
    - **Professional Tax (PT):** Stored in `salary_structures.professional_tax`.
 2. **Unpaid Leave Deduction ($U_{ded}$):**
-   $$U_{ded} = \text{unpaid\_leave\_days} \times \text{Daily Rate}$$
+   $$U_{ded} = \text{ROUND}(\text{unpaid\_leave\_days} \times \text{Daily Rate}, 2)$$
 3. **Late Attendance Penalty ($L_{ded}$):**
    - *Grace Threshold:* Employees are allowed up to 3 late arrivals per month without financial deduction.
    - *Penalty:* Every late mark from the 4th onwards incurs a half-day salary penalty:
-   $$L_{ded} = \max(0, \text{late\_days} - 3) \times (0.5 \times \text{Daily Rate})$$
+   $$L_{ded} = \text{ROUND}(\max(0, \text{late\_days} - 3) \times 0.5 \times \text{Daily Rate}, 2)$$
 4. **Income Tax (TDS) Calculation:**
    - Academic progressive slab model based on annualized gross ($AG = \text{Gross Standard Earnings} \times 12$):
      - Tier 1: $AG \le \$300,000 \implies \text{Tax} = \$0$
@@ -241,9 +241,9 @@ $$\text{Net Salary} = \text{Gross Standard Earnings} - \text{Total Deductions}$$
 | **Entities** | At minimum: Employee, Attendance, Leave, Salary, Payroll | 9 Normalized Entities: `departments`, `employees`, `salary_structures`, `attendance`, `leaves`, `payroll_periods`, `payrolls`, `payroll_items`, `audit_logs` | Present in `database/schema.sql` |
 | **Keys** | Primary Keys, Foreign Keys, Unique Keys, Candidate Keys | AUTO_INCREMENT PKs on all tables; explicit FKs with referential actions; UKs on codes, emails, names, composite keys | Verified on MariaDB 13.0.2 |
 | **Integrity** | Check constraints, sensible defaults, nullability | CHECK constraints on monetary non-negativity, dates order (`start <= end`), positive working days | Verified on MariaDB 13.0.2 |
-| **Normalization** | At least 3NF | Proven in `docs/phase-1/normalization.md`; all relations satisfy 3NF & BCNF | Formal FD proofs documented |
+| **Normalization** | At least 3NF | Proven in `docs/phase-1/normalization.md`; core master/transactional entities satisfy 3NF with documented snapshot denormalization in `payrolls` | Formal FD proofs documented |
 | **Payroll Model** | Distinguish master, config, attendance, and results | `employees` (master) $\ne$ `salary_structures` (config) $\ne$ `attendance` (log) $\ne$ `payrolls`/`payroll_items` (results) | Clear entity separation |
 | **Duplicate Guard** | Prevent duplicate attendance and duplicate payroll | `UNIQUE(employee_id, work_date)` and `UNIQUE(employee_id, period_id)` | DB constraints defined |
 | **Leave Overlap** | Prevent overlapping approved leaves | Trigger & procedure logic designed over `(start_date, end_date)` intervals | Specified in business rules |
 | **Auditability** | Complete audit history without overwriting | Dedicated `audit_logs` table storing JSON before/after snapshots and actor ID | Defined in schema and triggers |
-| **Engine** | Standard SQL compatible with MariaDB/MySQL | Written in standard MariaDB/MySQL InnoDB DDL | Executed and confirmed live on port 3306 |
+| **Engine** | Standard SQL compatible with MariaDB/MySQL | Written in standard MariaDB/MySQL InnoDB DDL | Verified on MariaDB 13.0.2 (note: prior instructor sign-off is unverified in repository history) |

@@ -21,7 +21,7 @@ In an enterprise with 5,000 active employees:
 - **Payroll Line Items:** $\approx 5,000 \text{ employees} \times 8 \text{ items} \implies 480,000 \text{ rows/year}$.
 
 ### 2.1 Table Partitioning on `attendance`
-Currently, `attendance` uses a single B-tree index on `(employee_id, work_date)`. In enterprise production, MariaDB's range partitioning by calendar year or month should be applied:
+Currently, `attendance` uses `uq_emp_work_date (employee_id, work_date)` plus composite Phase 3 reporting indexes (`idx_attendance_period_summary`, `idx_attendance_late_lookup`). In enterprise production, MariaDB's range partitioning by calendar year or month should be applied:
 ```sql
 ALTER TABLE `attendance` 
 PARTITION BY RANGE (YEAR(work_date)) (
@@ -58,7 +58,7 @@ Operational reports (such as Report 1 Attendance Summary and Report 3 Late-Marks
 ### Enterprise Topology:
 ```mermaid
 flowchart TD
-    App[PayTrace Application Servers] -->|Writes: Clock-in, Leave, Payroll| Primary[(MariaDB Primary Master)]
+    App[PayTrace Application Servers] -->|Writes: Attendance, Leave, Payroll| Primary[(MariaDB Primary Master)]
     Primary -->|Asynchronous / Semi-Sync Binlog Replication| Replica[(MariaDB Read Replica)]
     App -->|Heavy Analytical Reports & Slips| Replica
 ```

@@ -41,7 +41,10 @@ const IMAGES = {
   payslip: getBase64Image('docs/assets/screenshots/08-itemized-salary-slip.png'),
   attReport: getBase64Image('docs/assets/screenshots/09-monthly-attendance-report.png'),
   lateReport: getBase64Image('docs/assets/screenshots/10-late-marks-report.png'),
-  rbacDenial: getBase64Image('docs/assets/screenshots/11-access-denied-behavior.png')
+  rbacDenial: getBase64Image('docs/assets/screenshots/11-access-denied-behavior.png'),
+  salaryMgmt: getBase64Image('docs/assets/screenshots/12-salary-management.png'),
+  rollbackDemo: getBase64Image('docs/assets/screenshots/13-rollback-demo.png'),
+  auditTrail: getBase64Image('docs/assets/screenshots/14-audit-trail.png')
 };
 
 console.log('2. Constructing publication-grade HTML document...');
@@ -397,19 +400,19 @@ pre code {
     </div>
     <div class="cover-meta-item">
       <strong>Degree &amp; Department</strong>
-      [Department of Computer Science &amp; Engineering]<br/>
-      <span style="font-size: 8pt; color: #64748b;">[Bachelor of Technology / Equivalent Degree]</span>
+      [To be completed by student: Department]<br/>
+      <span style="font-size: 8pt; color: #64748b;">[To be completed by student: Degree Program]</span>
     </div>
     <div class="cover-meta-item">
       <strong>Institutional Affiliation</strong>
-      [Institution / University Name Placeholder]<br/>
-      <span style="font-size: 8pt; color: #64748b;">[Faculty Supervisor / Project Guide Placeholder]</span>
+      [To be completed by student: Institution / University Name]<br/>
+      <span style="font-size: 8pt; color: #64748b;">[To be completed by student: Faculty Supervisor / Project Guide]</span>
     </div>
   </div>
 
   <div class="cover-footer">
     <strong>PayTrace: Enterprise Database Engineering &amp; Full-Stack Architecture</strong><br/>
-    Document Reference: CAPSTONE-REPORT-2026-FINAL • MariaDB 13 (InnoDB) • Node.js v26 • Express.js 5
+    Submission Date: [To be completed by student] • MariaDB 13.0.2 (InnoDB) • Node.js v26 • Express.js 5.3.0
   </div>
 </div>
 
@@ -418,38 +421,38 @@ pre code {
   <h1 class="chapter-title">Certificate of Academic Authenticity</h1>
   <p><em>(Template requiring authorized institutional completion)</em></p>
   <p>
-    This is to certify that the capstone project report entitled <strong>"PayTrace: Payroll &amp; Attendance Management System"</strong>, submitted by <strong>Pulkit Pradhan</strong> (Roll No: 2501730036) in partial fulfillment of the requirements for the degree of <strong>[Bachelor of Technology in Computer Science &amp; Engineering / Equivalent Degree]</strong>, is an authentic record of academic engineering work conducted during the 2025–2026 academic year.
+    This is to certify that the capstone project report entitled <strong>"PayTrace: Payroll &amp; Attendance Management System"</strong>, submitted by <strong>Pulkit Pradhan</strong> (Roll No: 2501730036) in partial fulfillment of the requirements for <strong>[To be completed by student: Degree Name]</strong>, is an authentic record of academic engineering work carried out during the 2025–2026 academic year.
   </p>
   <p>
-    The relational data modeling (3NF/BCNF), procedural business logic (stored routines and validation triggers), analytical query optimization, role-based access control, and full-stack implementation presented in this document represent the verified technical work of the candidate.
+    The relational data modeling (3NF), procedural business logic (stored routines and validation triggers), analytical query optimization, role-based access control, and full-stack implementation presented in this document represent the verified technical work delivered in the repository.
   </p>
 
   <div class="signature-box" style="margin-top: 40pt;">
     <div class="sig-line">
-      <strong>[Supervisor / Project Guide Name]</strong><br/>
+      <strong>[To be completed by student: Supervisor Name]</strong><br/>
       Faculty Project Guide<br/>
-      Department of Computer Science &amp; Engineering
+      [To be completed by student: Department]
     </div>
     <div class="sig-line">
-      <strong>[Head of Department / Program Chair]</strong><br/>
+      <strong>[To be completed by student: Head of Department]</strong><br/>
       Head of Department<br/>
-      [Institution / University Name]
+      [To be completed by student: Institution Name]
     </div>
   </div>
 
   <div style="margin-top: 50pt;">
     <h1 class="chapter-title">Student Declaration</h1>
     <p>
-      I, <strong>Pulkit Pradhan</strong>, hereby declare that the capstone project entitled <strong>"PayTrace: Payroll &amp; Attendance Management System"</strong> is an authentic presentation of my own individual software engineering and database design work.
+      I, <strong>Pulkit Pradhan</strong>, hereby declare that the capstone project entitled <strong>"PayTrace: Payroll &amp; Attendance Management System"</strong> presents the implemented and verified architecture of the PayTrace repository.
     </p>
     <p>
       I affirm that:
     </p>
     <ul>
       <li>All database schemas, stored routines, triggers, middleware functions, and client controllers were implemented and verified as described.</li>
-      <li>All test logs, execution plans, and figures reflect authentic local execution against the MariaDB and Express runtime environment.</li>
-      <li>No hardcoded production credentials, live secrets, or unauthorized personal data have been published in this report or committed to version control.</li>
-      <li>Appropriate academic citations and bibliographic references have been provided for all external literature and software specifications.</li>
+      <li>All test logs, execution plans, and figures reflect authentic local execution against MariaDB 13.0.2, Express 5, and headless Chromium.</li>
+      <li>No hardcoded production credentials, live secrets, or fabricated institutional approval records have been published in this report or committed to version control.</li>
+      <li>Appropriate academic citations and known schema/calendar scope limitations have been documented transparently.</li>
     </ul>
 
     <div class="signature-box" style="margin-top: 35pt;">
@@ -457,7 +460,7 @@ pre code {
         <strong>Pulkit Pradhan</strong><br/>
         Roll No: 2501730036<br/>
         Candidate / Lead Engineer<br/>
-        Date: November 18, 2026
+        Date: [To be completed by student before submission]
       </div>
     </div>
   </div>
@@ -467,13 +470,13 @@ pre code {
 <div class="page-break">
   <h1 class="chapter-title">Acknowledgements</h1>
   <p>
-    I express my profound gratitude to my academic project supervisor, <strong>[Supervisor Name Placeholder]</strong>, for continuous guidance, rigorous critique, and technical direction throughout the architecture, database design, and evaluation phases of PayTrace.
+    I express gratitude to <strong>[To be completed by student: Faculty Supervisor Name]</strong> for academic guidance, critique, and technical direction throughout the architecture, database design, and evaluation phases of PayTrace.
   </p>
   <p>
-    I am equally indebted to the faculty of the <strong>Department of Computer Science &amp; Engineering</strong> at <strong>[Institution / University Name]</strong> for providing the conceptual foundations in relational database theory, database normalization, concurrency control, and distributed systems.
+    I am equally grateful to the faculty of <strong>[To be completed by student: Department Name]</strong> at <strong>[To be completed by student: Institution Name]</strong> for providing the conceptual foundations in relational database theory, normalization, concurrency control, and application security.
   </p>
   <p>
-    Finally, I acknowledge the engineering contributions of the open-source community behind MariaDB, Node.js, Express.js, Chromium, and Linux, whose tooling made this project possible.
+    Finally, I acknowledge the engineering contributions of the open-source community behind MariaDB, Node.js, Express.js, Graphviz, and Chromium, whose tooling made this project possible.
   </p>
 
   <div style="margin-top: 30pt;">
@@ -482,17 +485,17 @@ pre code {
       In enterprise resource planning (ERP), payroll and attendance management systems constitute mission-critical software infrastructure. Deficiencies in relational modeling, inadequate concurrency controls, and opaque salary calculations routinely produce severe operational failures: phantom disbursements, overlapping leave scheduling conflicts, retroactive compensation tampering, and insecure direct object reference (IDOR) vulnerabilities.
     </p>
     <p>
-      This report presents <strong>PayTrace</strong>, an individual academic capstone project engineered to resolve these challenges through a transparent, auditable, and transaction-safe platform. Built on a 3-tier architecture utilizing <strong>MariaDB 13 (InnoDB)</strong>, <strong>Node.js v26</strong>, and <strong>Express.js 5</strong>, PayTrace demonstrates engineering across five academic phases:
+      This report presents <strong>PayTrace</strong>, an academic capstone project engineered to resolve these challenges through a transparent, auditable, and transaction-safe platform. Built on a 3-tier architecture utilizing <strong>MariaDB 13.0.2 (InnoDB)</strong>, <strong>Node.js v26</strong>, and <strong>Express.js 5.3.0</strong>, PayTrace demonstrates engineering across five academic phases:
     </p>
     <ol>
-      <li><strong>Relational Schema Modeling (Phase 1):</strong> A 9-table normalized relational schema strictly satisfying 3NF and BCNF, with declarative check constraints and foreign-key referential actions.</li>
-      <li><strong>Procedural Business Logic (Phase 2):</strong> Deterministic stored functions (<code>fn_calculate_daily_rate</code>, <code>fn_calculate_monthly_tds</code>), bulk processing procedures with explicit cursor iteration (<code>sp_process_bulk_payroll</code>), and validation triggers intercepting duplicate attendance and overlapping leaves.</li>
-      <li><strong>Analytical Reporting &amp; Optimization (Phase 3):</strong> Three multi-table reports optimized via a targeted composite index (<code>idx_attendance_late_lookup</code>), which eliminates temporary tables and reduces query execution cost by <strong>66.7%</strong>.</li>
-      <li><strong>Security &amp; Role-Based Access Control (Phase 4):</strong> Dual-role security (<code>HR_ADMIN</code> vs. <code>EMPLOYEE</code>) with salted 10-round Bcrypt password hashing, stateless JWT session tokens, and route-level authorization middleware (<code>enforceSelfOrAdmin</code>) that blocks horizontal privilege escalation.</li>
-      <li><strong>Full-Stack Single-Page Application (Phase 5):</strong> An intuitive web interface providing distinct role dashboards, a live web punch clock, leave management, and an itemized payslip voucher with CSS print layout.</li>
+      <li><strong>Relational Schema Modeling (Phase 1):</strong> A frozen 9-table relational schema satisfying 3NF with foreign-key referential actions and domain constraints.</li>
+      <li><strong>Procedural Business Logic (Phase 2):</strong> Three stored functions (<code>fn_count_working_days</code>, <code>fn_calculate_daily_rate</code>, <code>fn_calculate_monthly_tds</code>), bulk processing procedures (<code>sp_calculate_payroll</code>, <code>sp_process_bulk_payroll</code>), and seven validation/audit triggers enforcing temporal guardrails, cross-month leave proration, and zero-floored deduction capping.</li>
+      <li><strong>Analytical Reporting &amp; Optimization (Phase 3):</strong> Four SQL reports supported by four composite indexes (<code>database/indexes.sql</code>); <code>idx_attendance_late_lookup</code> reduces optimizer cost on Report 3 by <strong>93.5%</strong> on 792 rows and <strong>99.3%</strong> at 50,000 rows.</li>
+      <li><strong>Security &amp; Role-Based Access Control (Phase 4):</strong> Least-privilege database users (<code>paytrace_app</code>, <code>paytrace_reader</code>), fail-closed <code>JWT_SECRET</code> startup validation, <code>HttpOnly</code> cookie + <code>verifyCsrf</code> session controls, and strict RBAC keeping <code>EMPLOYEE</code> accounts read-only.</li>
+      <li><strong>Full-Stack Single-Page Application (Phase 5):</strong> A vanilla HTML5/CSS3/ES6 portal providing dynamic HR dashboards, attendance/leave/salary management, itemized payslip vouchers, and read-only employee self-service.</li>
     </ol>
     <p>
-      All functionality is verified across 12 employees over three consecutive months (792 daily attendance logs, 36 finalized payroll statements). An automated test suite executing 20 rubric test cases passes with 100% success (20/20), confirming data isolation, transaction rollback safety (zero ghost records on constraint failure), and formula precision.
+      All functionality is verified across 12 employees over three Mon–Fri calendar months (June = 22, July = 23, August = 21 working days; 792 attendance logs, 36 payrolls, 221 itemized lines). Combined automation achieves <strong>21 / 21</strong> SQL/Unit/HTTP tests and <strong>11 / 11</strong> headless Chromium E2E checks (<strong>32 / 32 PASSED</strong>, 0 browser errors).
     </p>
   </div>
 </div>
@@ -517,7 +520,7 @@ pre code {
     <li class="toc-item level-1"><span>5. Relational Database Design</span><span>Page 9</span></li>
     <li class="toc-item level-2"><span>5.1 Entity-Relationship Model &amp; Cardinalities</span><span>Page 9</span></li>
     <li class="toc-item level-2"><span>5.2 Complete Data Dictionary (9 Normalized Tables)</span><span>Page 9</span></li>
-    <li class="toc-item level-2"><span>5.3 Relational Normalization Proof (3NF &amp; BCNF)</span><span>Page 11</span></li>
+    <li class="toc-item level-2"><span>5.3 Relational Normalization Proof (3NF)</span><span>Page 11</span></li>
     <li class="toc-item level-1"><span>6. Payroll Calculation Methodology &amp; Mathematics</span><span>Page 12</span></li>
     <li class="toc-item level-2"><span>6.1 Mathematical Formulations (Daily Rate, TDS, Penalties)</span><span>Page 12</span></li>
     <li class="toc-item level-2"><span>6.2 Worked Examples &amp; Discrepancy Reconciliation</span><span>Page 13</span></li>
@@ -525,19 +528,18 @@ pre code {
     <li class="toc-item level-2"><span>7.1 Daily Attendance Lifecycle &amp; Punctuality Engine</span><span>Page 14</span></li>
     <li class="toc-item level-2"><span>7.2 Database Triggers for Overlap Prevention</span><span>Page 14</span></li>
     <li class="toc-item level-1"><span>8. Security &amp; Role-Based Access Control</span><span>Page 14</span></li>
-    <li class="toc-item level-2"><span>8.1 Dual-Role Security Model &amp; JWT Pipeline</span><span>Page 14</span></li>
-    <li class="toc-item level-2"><span>8.2 Anti-Tampering Middleware &amp; Audit Trail</span><span>Page 14</span></li>
+    <li class="toc-item level-2"><span>8.1 Dual-Role Security Model, DB Privileges &amp; CSRF Pipeline</span><span>Page 14</span></li>
     <li class="toc-item level-1"><span>9. Transaction Management &amp; ACID Safety</span><span>Page 14</span></li>
     <li class="toc-item level-2"><span>9.1 Atomic Payroll Transactions &amp; Rollback Proof</span><span>Page 14</span></li>
-    <li class="toc-item level-1"><span>10. Analytical Reports &amp; Query Optimization</span><span>Page 15</span></li>
-    <li class="toc-item level-2"><span>10.1 Reports Implementation (Attendance, Slip, Late Marks)</span><span>Page 15</span></li>
-    <li class="toc-item level-2"><span>10.2 Before/After EXPLAIN Analysis (66.7% Cost Reduction)</span><span>Page 15</span></li>
-    <li class="toc-item level-1"><span>11. Application Implementation</span><span>Page 15</span></li>
-    <li class="toc-item level-1"><span>12. User Interface Evidence &amp; Visual Gallery</span><span>Page 16</span></li>
-    <li class="toc-item level-1"><span>13. Testing, Quality Assurance &amp; Rubric Matrix</span><span>Page 20</span></li>
-    <li class="toc-item level-1"><span>14. Deployment, Setup &amp; Evaluator Guide</span><span>Page 20</span></li>
-    <li class="toc-item level-1"><span>15. Discussion, Limitations &amp; Conclusion</span><span>Page 21</span></li>
-    <li class="toc-item level-1"><span>16. References &amp; Appendices</span><span>Page 21</span></li>
+    <li class="toc-item level-1"><span>10. Analytical Reports &amp; Query Optimization</span><span>Page 16</span></li>
+    <li class="toc-item level-2"><span>10.1 Reports Implementation (Attendance, Slip, Late Marks)</span><span>Page 16</span></li>
+    <li class="toc-item level-2"><span>10.2 Before/After EXPLAIN Analysis (93.5% / 99.3% Cost Reduction)</span><span>Page 16</span></li>
+    <li class="toc-item level-1"><span>11. Application Implementation</span><span>Page 16</span></li>
+    <li class="toc-item level-1"><span>12. User Interface Evidence &amp; Visual Gallery</span><span>Page 17</span></li>
+    <li class="toc-item level-1"><span>13. Testing, Quality Assurance &amp; Rubric Matrix</span><span>Page 22</span></li>
+    <li class="toc-item level-1"><span>14. Deployment, Setup &amp; Evaluator Guide</span><span>Page 22</span></li>
+    <li class="toc-item level-1"><span>15. Discussion, Limitations &amp; Conclusion</span><span>Page 23</span></li>
+    <li class="toc-item level-1"><span>16. References &amp; Appendices</span><span>Page 23</span></li>
   </ul>
 </div>
 
@@ -654,32 +656,32 @@ pre code {
     <tr>
       <td><strong>Application Framework</strong></td>
       <td>Express.js</td>
-      <td><code>5.2.1</code></td>
+      <td><code>5.3.0</code></td>
       <td>Minimalist middleware chaining, robust routing pipeline, and error handling.</td>
     </tr>
     <tr>
       <td><strong>Database Driver</strong></td>
       <td><code>mysql2/promise</code></td>
-      <td><code>3.16.0</code></td>
-      <td>High-performance connection pooling, prepared statements, multi-statement support.</td>
+      <td><code>3.24.6</code></td>
+      <td>Parameterized prepared statements (<code>multipleStatements: false</code>, <code>dateStrings: ['DATE']</code>).</td>
     </tr>
     <tr>
       <td><strong>Password Hashing</strong></td>
       <td><code>bcryptjs</code></td>
       <td><code>3.0.3</code></td>
-      <td>10-round salted key derivation to protect credentials against rainbow tables.</td>
+      <td>Per-user 10-round salted key derivation to protect credentials against rainbow tables.</td>
     </tr>
     <tr>
-      <td><strong>Authentication</strong></td>
-      <td><code>jsonwebtoken</code></td>
+      <td><strong>Session &amp; CSRF</strong></td>
+      <td><code>jsonwebtoken</code> + <code>cookie-parser</code></td>
       <td><code>9.0.3</code></td>
-      <td>Stateless HMAC-SHA256 signed bearer tokens carrying authenticated claims.</td>
+      <td><code>HS256</code> JWT inside <code>HttpOnly</code> cookie + <code>timingSafeEqual</code> CSRF header check.</td>
     </tr>
     <tr>
       <td><strong>Client Frontend</strong></td>
       <td>Vanilla HTML5 / CSS3 / ES6</td>
       <td>Modern Standards</td>
-      <td>Zero build-step dependency, native DOM manipulation, responsive CSS variables, print layout.</td>
+      <td>Zero build-step dependency, XSS-escaped DOM helpers (<code>escapeHtml</code>), print layout.</td>
     </tr>
   </table>
 
@@ -705,9 +707,10 @@ pre code {
     Every client request passes through an Express middleware pipeline:
   </p>
   <ul>
-    <li><code>authenticateToken</code>: Verifies the JWT signature from the <code>Authorization: Bearer</code> header.</li>
-    <li><code>requireRole('HR_ADMIN')</code>: Restricts administrative endpoints (e.g. employee creation, cycle execution).</li>
-    <li><code>enforceSelfOrAdmin</code>: Enforces data isolation by verifying that non-admin callers access only records matching their authenticated <code>employee_id</code>.</li>
+    <li><code>authenticateToken</code>: Verifies the <code>HS256</code> JWT from the <code>HttpOnly</code> <code>token</code> cookie (or Bearer fallback) and re-checks active account status in DB.</li>
+    <li><code>verifyCsrf</code>: Validates double-submit <code>X-CSRF-Token</code> headers using <code>crypto.timingSafeEqual</code> on mutating requests.</li>
+    <li><code>requireRole('HR_ADMIN')</code>: Restricts all mutating business endpoints, reports, and audit logs to HR administrators (employees are strictly read-only).</li>
+    <li><code>enforceSelfOrAdmin</code>: Enforces horizontal data isolation so employees inspect only records matching their authenticated <code>employee_id</code>.</li>
   </ul>
 </div>
 
@@ -743,7 +746,7 @@ pre code {
     </tr>
     <tr>
       <td><code>department_name</code></td>
-      <td>VARCHAR(100), NOT NULL</td>
+      <td>VARCHAR(50), NOT NULL</td>
       <td>UNIQUE KEY (uq_department_name)</td>
     </tr>
     <tr>
@@ -801,12 +804,12 @@ pre code {
     <tr>
       <td><code>basic_salary</code></td>
       <td>DECIMAL(10,2), NOT NULL</td>
-      <td>CHECK (basic_salary &gt;= 0)</td>
+      <td>CHECK (basic_salary &gt;= 0.00)</td>
     </tr>
     <tr>
-      <td><code>hra, special_allowance</code></td>
+      <td><code>hra, special, pf, pt</code></td>
       <td>DECIMAL(10,2), NOT NULL</td>
-      <td>CHECK (&gt;= 0), DEFAULT 0.00</td>
+      <td>CHECK (&gt;= 0.00), DEFAULT 0.00</td>
     </tr>
     <tr>
       <td rowspan="4"><strong>attendance</strong></td>
@@ -821,8 +824,8 @@ pre code {
     </tr>
     <tr>
       <td><code>status</code></td>
-      <td>ENUM('PRESENT','ABSENT',...)</td>
-      <td>DEFAULT 'PRESENT'</td>
+      <td>ENUM('PRESENT','ABSENT','HALF_DAY','ON_LEAVE')</td>
+      <td>NOT NULL</td>
     </tr>
     <tr>
       <td><code>is_late, late_minutes</code></td>
@@ -831,7 +834,7 @@ pre code {
     </tr>
   </table>
 
-  <h3 class="sub-title">Table 5: leaves, Table 6: payroll_periods, Table 7: payrolls &amp; Table 8: payroll_items</h3>
+  <h3 class="sub-title">Tables 5–9: leaves, payroll_periods, payrolls, payroll_items &amp; audit_logs</h3>
   <table>
     <tr>
       <th style="width: 25%;">Table Name</th>
@@ -841,14 +844,14 @@ pre code {
     </tr>
     <tr>
       <td><strong>leaves</strong></td>
-      <td><code>start_date, end_date</code></td>
-      <td>DATE, NOT NULL</td>
-      <td>CHECK (start_date &lt;= end_date)</td>
+      <td><code>start_date, end_date, total_days</code></td>
+      <td>DATE, DECIMAL(4,1) NOT NULL</td>
+      <td>CHECK (start_date &lt;= end_date), total_days &gt; 0</td>
     </tr>
     <tr>
       <td><strong>payroll_periods</strong></td>
-      <td><code>period_name, days</code></td>
-      <td>VARCHAR(50), INT, NOT NULL</td>
+      <td><code>period_name, days, status</code></td>
+      <td>VARCHAR(30), INT, ENUM</td>
       <td>UNIQUE KEY, CHECK (days &gt; 0)</td>
     </tr>
     <tr>
@@ -863,29 +866,29 @@ pre code {
       <td>UNIQUE KEY uq_emp_payroll_period</td>
     </tr>
     <tr>
-      <td><code>gross, deductions, net</code></td>
-      <td>DECIMAL(10,2), NOT NULL</td>
-      <td>CHECK (gross &gt;= 0, net &gt;= 0)</td>
+      <td><code>approved_paid_leave_days, gross, deductions, net</code></td>
+      <td>DECIMAL(4,1), DECIMAL(10,2)</td>
+      <td>CHECK (gross &gt;= 0, deductions &gt;= 0, net &gt;= 0)</td>
     </tr>
     <tr>
       <td><strong>payroll_items</strong></td>
-      <td><code>payroll_id, type, amount</code></td>
+      <td><code>payroll_id, item_type, amount</code></td>
       <td>INT, ENUM, DECIMAL(10,2)</td>
-      <td>FK -&gt; payrolls (ON DELETE CASCADE)</td>
+      <td>FK -&gt; payrolls (ON DELETE CASCADE), CHECK (&gt;= 0)</td>
     </tr>
     <tr>
       <td><strong>audit_logs</strong></td>
-      <td><code>table_name, old/new JSON</code></td>
-      <td>VARCHAR, LONGTEXT JSON</td>
-      <td>CHECK (JSON_VALID(old_values))</td>
+      <td><code>table_name, old_values, new_values</code></td>
+      <td>VARCHAR(50), LONGTEXT NULL</td>
+      <td>JSON snapshots generated by SQL triggers</td>
     </tr>
   </table>
 
-  <h2 class="section-title">5.3 Relational Normalization Proof (3NF &amp; BCNF)</h2>
+  <h2 class="section-title">5.3 Relational Normalization Proof (3NF)</h2>
   <ul>
     <li><strong>1NF:</strong> All relations possess distinct primary keys; columns are atomic. Multi-valued compensation items are normalized into <code>payroll_items</code>.</li>
-    <li><strong>2NF:</strong> Every non-prime attribute is fully functionally dependent on the entire candidate key. In <code>attendance</code>, attributes depend on the composite key <code>(employee_id, work_date)</code>.</li>
-    <li><strong>3NF &amp; BCNF:</strong> Transitive functional dependencies are eliminated. Department descriptors reside in <code>departments</code>, not <code>employees</code>. In <code>payrolls</code>, the candidate key <code>(employee_id, period_id)</code> is a superkey for all dependent attributes.</li>
+    <li><strong>2NF:</strong> Every table uses a single-column surrogate <code>AUTO_INCREMENT</code> PK (preventing partial key dependencies), while non-key fields also depend fully on composite candidate keys like <code>(employee_id, work_date)</code>.</li>
+    <li><strong>3NF &amp; Snapshot Integrity:</strong> Transitive dependencies are eliminated (department details reside in <code>departments</code>; cycle boundaries reside in <code>payroll_periods</code>). Historical totals in <code>payrolls</code> are intentionally snapshotted alongside <code>salary_id</code> so pay revisions never alter prior slips.</li>
   </ul>
 </div>
 
@@ -912,7 +915,7 @@ pre code {
 
   <p><strong>4. Progressive Tardiness Penalty Policy:</strong></p>
   <div class="formula-box">
-    Late Penalty = max(0, Late Occurrences - 3) &times; ROUND(Daily Rate / 2, 2)
+    Late Penalty = ROUND(max(0, Late Occurrences - 3) &times; 0.5 &times; Daily Rate, 2)
   </div>
 
   <p><strong>5. Progressive Income Tax Withholding (Stored Function <code>fn_calculate_monthly_tds</code>):</strong></p>
@@ -940,7 +943,7 @@ pre code {
     <li><strong>Working Days:</strong> July 2026 = 23 days &rarr; <code>Daily Rate = ROUND(100000 / 23, 2) = $4,347.83</code></li>
     <li><strong>Attendance Record:</strong> 23 present days, 6 late arrivals (&gt;09:15:00).</li>
     <li><strong>Late Deduction:</strong> <code>Excess Late Marks = 6 - 3 = 3</code>.<br/>
-      <code>Half-Day Rate = 4347.826 / 2 = $2,173.913</code> &rarr; <code>Penalty = 3 &times; 2173.913 = $6,521.75</code></li>
+      <code>Penalty = ROUND(3 &times; 0.5 &times; $4,347.83, 2) = ROUND(6521.745, 2) = $6,521.75</code></li>
     <li><strong>Tax Calculation:</strong> Projected Annual Gross = 12 &times; \$100,000 = \$1,200,000.00.<br/>
       <code>Annual Tax = $15,000 + ((1200000 - 600000) &times; 0.10) = $15,000 + $60,000 = $75,000.00</code><br/>
       <code>Monthly TDS = $75,000 / 12 = $6,250.00</code></li>
@@ -962,12 +965,12 @@ pre code {
   
   <h2 class="section-title">7.1 Daily Attendance Lifecycle &amp; Punctuality Engine</h2>
   <p>
-    When an employee clocks in via <code>POST /api/attendance/clock-in</code>, the server captures the timestamp. If arrival occurs past <code>09:15:00</code>, the record is flagged as <code>is_late = TRUE</code>, and elapsed minutes are recorded. Duplicate entries on the same day are rejected by natural key <code>uq_emp_work_date</code>.
+    Attendance entries are recorded and maintained exclusively by <code>HR_ADMIN</code> via <code>POST /api/attendance</code> and <code>PUT /api/attendance/:attendanceId</code> (legacy self clock-in is blocked for <code>EMPLOYEE</code> accounts to preserve read-only RBAC isolation). Triggers enforce check-out &ge; check-in, reject timestamps on <code>ABSENT</code>/<code>ON_LEAVE</code> rows, flag tardiness only when arrival exceeds <code>09:15:00</code>, and reset stale late flags cleanly. Duplicate entries on the same date are rejected by <code>uq_emp_work_date</code>.
   </p>
 
   <h2 class="section-title">7.2 Database Triggers for Overlap Prevention</h2>
   <p>
-    Database triggers <code>trg_leaves_before_insert</code> and <code>trg_leaves_before_update</code> enforce scheduling integrity:
+    Database triggers <code>trg_leaves_before_insert</code> and <code>trg_leaves_before_update</code> enforce Mon–Fri duration (<code>fn_count_working_days</code>), reject conflicting non-leave attendance, and prevent overlapping approved leaves on both insert and approval transition:
   </p>
   <pre><code>-- Database Trigger snippet enforcing leave conflict prevention
 IF NEW.status = 'APPROVED' THEN
@@ -987,23 +990,23 @@ END IF;</code></pre>
 
   <h1 class="chapter-title" style="margin-top: 18pt;">Chapter 8: Security &amp; Role-Based Access Control</h1>
 
-  <h2 class="section-title">8.1 Dual-Role Security Model &amp; JWT Pipeline</h2>
+  <h2 class="section-title">8.1 Dual-Role Security Model, DB Privileges &amp; CSRF Pipeline</h2>
   <p>
-    PayTrace enforces role-based access control (RBAC) across two roles: <code>HR_ADMIN</code> and <code>EMPLOYEE</code>. Sessions are managed through stateless HMAC-SHA256 JWT tokens. Sensitive endpoints verify permissions:
+    PayTrace enforces least-privilege database accounts (<code>database/security.sql</code>: <code>paytrace_app</code> with DML+EXECUTE only; view-only <code>paytrace_reader</code>), fail-closed <code>JWT_SECRET</code> startup validation, <code>HS256</code> <code>HttpOnly</code> session cookies (8h expiry), double-submit <code>X-CSRF-Token</code> verification (<code>crypto.timingSafeEqual</code>), and strict RBAC making <code>EMPLOYEE</code> accounts read-only:
   </p>
   <ul>
-    <li><code>requireRole('HR_ADMIN')</code>: Gated endpoints return <code>403 Forbidden</code> if invoked by general employees.</li>
-    <li><code>enforceSelfOrAdmin</code>: Middleware inspects route and query parameters (e.g. <code>?employeeId=4</code>). If an employee attempts to access another worker's records, the request is blocked with <code>HTTP 403 Forbidden</code>.</li>
+    <li><code>requireRole('HR_ADMIN')</code>: Gated endpoints (employee CRUD, salary revision, attendance/leave writes, payroll processing, reports, audit logs) return <code>403 Forbidden</code> to general employees.</li>
+    <li><code>enforceSelfOrAdmin</code>: Enforces horizontal isolation so non-admin callers access only records matching their authenticated <code>employee_id</code>.</li>
   </ul>
 
   <h1 class="chapter-title" style="margin-top: 18pt;">Chapter 9: Transaction Management &amp; ACID Safety</h1>
 
   <h2 class="section-title">9.1 Atomic Payroll Transactions &amp; Rollback Proof</h2>
   <p>
-    Stored procedure <code>sp_calculate_payroll</code> opens an explicit transaction boundary (<code>START TRANSACTION</code>). If any integrity constraint fails during payroll insertion, an active <code>SQLEXCEPTION</code> handler triggers <code>ROLLBACK</code>.
+    Stored procedure <code>sp_calculate_payroll</code> opens an explicit transaction boundary (<code>START TRANSACTION</code>) before snapshot reads, enforces deduction capping (<code>net_salary &gt;= 0.00</code>), and commits or invokes <code>ROLLBACK</code> inside its <code>SQLEXCEPTION</code> handler.
   </p>
   <p>
-    Verification procedure <code>sp_demonstrate_transaction_rollback</code> proves zero ghost records: after injecting a constraint failure during batch calculation, the table count remains at exactly 36 records and 288 line items (0 partial writes).
+    Verification procedure <code>sp_demonstrate_transaction_rollback</code> executes a multi-step test inserting <code>__ROLLBACK_PROBE_DEPT__</code> plus a negative-salary payroll record; the <code>SQLEXCEPTION</code> handler rolls back both operations cleanly, preserving exact baseline table counts (36 payrolls, 221 itemized lines, 0 probe rows).
   </p>
 </div>
 
@@ -1013,45 +1016,43 @@ END IF;</code></pre>
 
   <h2 class="section-title">10.1 Reports Implementation</h2>
   <ul>
-    <li><strong>Report 1: Monthly Attendance Summary:</strong> Multi-table aggregation of working days, present days, absences, and leaves across all active employees.</li>
-    <li><strong>Report 2: Itemized Salary Slip:</strong> Complete breakdown of gross earnings, statutory contributions, and net pay.</li>
-    <li><strong>Report 3: Late-Marks Report:</strong> Ranks employees by tardiness duration, highlighting repeat punctuality infractions.</li>
+    <li><strong>Report 1: Monthly Attendance Summary:</strong> Weighted aggregation of working days, present days (<code>HALF_DAY = 0.5</code>), absences, and leaves including historical inactive employees.</li>
+    <li><strong>Report 2: Itemized Salary Slip:</strong> Complete breakdown of earnings, capped deductions, and net pay reconciled from <code>payroll_items</code>.</li>
+    <li><strong>Report 3: Late-Marks Report:</strong> Ranks tardy worked arrivals past <code>09:15:00</code> by descending late minutes.</li>
+    <li><strong>Report 4: Departmental Payroll Expenditure Summary:</strong> Department-level headcount, gross earnings, deductions, and net payout rollups.</li>
   </ul>
 
   <h2 class="section-title">10.2 Before &amp; After EXPLAIN Optimization Study</h2>
   <p>
-    In Report 3, filtering on <code>work_date</code> and <code>is_late</code> across all employees caused an initial bottleneck because the existing unique index had <code>employee_id</code> as its leftmost prefix. The optimizer was forced into a full table scan on <code>departments</code>, nested loops, and temporary tables.
+    In Report 3, filtering on <code>work_date</code> and <code>is_late</code> across all employees previously scanned through <code>departments</code>, <code>employees</code>, and <code>attendance</code> (<code>uq_emp_work_date</code>) using temporary tables and filesorts. Four composite indexes in <code>database/indexes.sql</code>—anchored by <code>idx_attendance_late_lookup (is_late, work_date)</code>—switch execution to a direct index range scan:
   </p>
-  <p>
-    To resolve this, composite index <code>idx_attendance_late_lookup</code> was introduced:
-  </p>
-  <pre><code>CREATE INDEX idx_attendance_late_lookup ON attendance (is_late, work_date, late_minutes);</code></pre>
+  <pre><code>CREATE INDEX idx_attendance_late_lookup ON attendance (is_late, work_date);</code></pre>
 
   <table>
     <tr>
-      <th style="width: 30%;">Optimization Metric</th>
-      <th style="width: 35%;">Before Composite Index</th>
-      <th style="width: 35%;">After Composite Index</th>
+      <th style="width: 30%;">Benchmark Metric</th>
+      <th style="width: 35%;">Before <code>indexes.sql</code></th>
+      <th style="width: 35%;">After <code>indexes.sql</code></th>
     </tr>
     <tr>
-      <td><strong>Driving Table Scan</strong></td>
-      <td><code>departments</code> (Full scan, 5 rows)</td>
-      <td><code>attendance</code> (Index range scan)</td>
+      <td><strong>792 Rows: Access &amp; Temp Table</strong></td>
+      <td><code>ref (uq_emp_work_date)</code>, <code>Using temporary</code></td>
+      <td><strong><code>range (idx_attendance_late_lookup)</code>, temp table eliminated</strong></td>
     </tr>
     <tr>
-      <td><strong>Temporary Table on Disk</strong></td>
-      <td><code>using_temporary_table: true</code></td>
-      <td><strong><code>using_temporary_table: false</code> (Eliminated)</strong></td>
+      <td><strong>792 Rows: Optimizer Cost &amp; DB Time</strong></td>
+      <td>Cost <code>1.1228</code> · <code>0.388 ms</code> DB</td>
+      <td><strong>Cost <code>0.0732</code> (-93.5%) · <code>0.111 ms</code> DB (3.49&times; faster)</strong></td>
     </tr>
     <tr>
-      <td><strong>Filesort Operation</strong></td>
-      <td><code>using_filesort: true</code></td>
-      <td><strong><code>using_filesort: false</code> (Eliminated)</strong></td>
+      <td><strong>50,000 Rows: Optimizer Cost</strong></td>
+      <td>Cost <code>75.3550</code> (50,000 index rows)</td>
+      <td><strong>Cost <code>0.5324</code> (-99.3%, 124 index rows)</strong></td>
     </tr>
     <tr>
-      <td><strong>Optimizer Estimated Cost</strong></td>
-      <td>0.035306911</td>
-      <td><strong>0.011762145 (66.7% Reduction)</strong></td>
+      <td><strong>50,000 Rows: Client Median (15 runs)</strong></td>
+      <td><code>10.376 ms</code></td>
+      <td><strong><code>0.873 ms</code> (11.9&times; faster)</strong></td>
     </tr>
   </table>
 
@@ -1062,10 +1063,10 @@ END IF;</code></pre>
     The PayTrace repository structure maintains clear separation of concerns:
   </p>
   <ul>
-    <li><code>database/</code>: Schema DDL, stored procedures, functions, triggers, indexes, and reports.</li>
-    <li><code>src/middleware/auth.js</code>: JWT verification and <code>enforceSelfOrAdmin</code> anti-IDOR gates.</li>
-    <li><code>src/routes/</code>: Modular API routes for authentication, employees, attendance, leaves, payroll, reports, and audit logs.</li>
-    <li><code>src/public/</code>: Lightweight Single Page Application (HTML, CSS variables, and vanilla JavaScript client).</li>
+    <li><code>database/</code>: Schema DDL, functions, triggers, procedures, indexes, security views/roles, reports, and seed data.</li>
+    <li><code>src/middleware/auth.js</code>: Fail-closed JWT validation, <code>verifyCsrf</code>, <code>requireRole</code>, and <code>enforceSelfOrAdmin</code>.</li>
+    <li><code>src/routes/</code>: Modular API routes for auth, employees, salary, attendance, leaves, payroll, reports, and audit logs.</li>
+    <li><code>src/public/</code>: Single-Page Application using <code>escapeHtml()</code> XSS protection and cookie-backed <code>apiFetch()</code> calls.</li>
   </ul>
 </div>
 
@@ -1083,29 +1084,29 @@ END IF;</code></pre>
 
   <div class="figure-container">
     <img src="${IMAGES.hrDashboard}" alt="HR Executive Dashboard" />
-    <div class="caption">Figure 12.2: HR / Admin Executive Dashboard displaying 12 Active Employees, $1.26M Monthly Liability, 1 Pending Leave, and Quick Actions</div>
+    <div class="caption">Figure 12.2: HR / Admin Executive Dashboard displaying 12 Active Employees, $1,262,000.00 Monthly Liability, 1 Pending Leave, and August 2026 metrics</div>
   </div>
 
   <div class="figure-container">
     <img src="${IMAGES.empDashboard}" alt="Employee Self-Service Dashboard" />
-    <div class="caption">Figure 12.3: Employee Self-Service Dashboard showing restricted staff navigation, compensation card, and active punch clock</div>
+    <div class="caption">Figure 12.3: Employee Self-Service Read-Only Dashboard showing personal compensation breakdown, logs, and hidden admin navigation</div>
   </div>
 </div>
 
 <div class="page-break">
   <div class="figure-container">
     <img src="${IMAGES.roster}" alt="Organizational Roster" />
-    <div class="caption">Figure 12.4: Organizational Employee Directory listing 12 seeded employees across 5 departments with roles and compensation</div>
+    <div class="caption">Figure 12.4: Organizational Employee Directory listing 12 seeded employees across 5 departments with Edit and Salary Revision controls</div>
   </div>
 
   <div class="figure-container">
     <img src="${IMAGES.attendance}" alt="Daily Attendance Logs" />
-    <div class="caption">Figure 12.5: Daily Attendance Management Log showing timestamps, status tags, and punctuality badges (ON TIME vs. LATE)</div>
+    <div class="caption">Figure 12.5: HR Attendance Management Log showing timestamps, status badges, punctuality tags, and HR edit controls</div>
   </div>
 
   <div class="figure-container">
-    <img src="${IMAGES.leave}" alt="Leave Workflow &amp; Application Modal" />
-    <div class="caption">Figure 12.6: Leave Management Interface with active Submit Application modal and background HR review queue</div>
+    <img src="${IMAGES.leave}" alt="Leave Workflow &amp; Approval Queue" />
+    <div class="caption">Figure 12.6: HR Leave Records &amp; Approvals queue displaying + Record Leave, Approve/Reject, and Cancel controls</div>
   </div>
 </div>
 
@@ -1122,7 +1123,7 @@ END IF;</code></pre>
 
   <div class="figure-container">
     <img src="${IMAGES.attReport}" alt="Monthly Attendance Summary Report" />
-    <div class="caption">Figure 12.9: Monthly Attendance Summary Report (Phase 3 Report 1) aggregating working days, present days, and late marks</div>
+    <div class="caption">Figure 12.9: Monthly Attendance Summary Report (Phase 3 Report 1) aggregating working days, weighted present days, and late marks</div>
   </div>
 </div>
 
@@ -1134,7 +1135,24 @@ END IF;</code></pre>
 
   <div class="figure-container">
     <img src="${IMAGES.rbacDenial}" alt="RBAC Data Isolation Defense" />
-    <div class="caption">Figure 12.11: Live RBAC 403 Forbidden Defense: David Miller attempting direct object access to Alice Morgan's payslip, blocked by server middleware</div>
+    <div class="caption">Figure 12.11: Live RBAC 403 Forbidden Defense: Employee peer-slip attempt rejected cleanly by server authorization</div>
+  </div>
+
+  <div class="figure-container">
+    <img src="${IMAGES.salaryMgmt}" alt="HR Salary Revision &amp; History Modal" />
+    <div class="caption">Figure 12.12: HR Effective-Dated Salary History &amp; Revision Modal</div>
+  </div>
+</div>
+
+<div class="page-break">
+  <div class="figure-container">
+    <img src="${IMAGES.rollbackDemo}" alt="Transaction Rollback Verification Modal" />
+    <div class="caption">Figure 12.13: Multi-Step Transaction Rollback Proof (sp_demonstrate_transaction_rollback -> ROLLBACK_VERIFIED)</div>
+  </div>
+
+  <div class="figure-container">
+    <img src="${IMAGES.auditTrail}" alt="Security Audit Trail" />
+    <div class="caption">Figure 12.14: Immutable Security Audit Trail capturing before/after JSON snapshots attributed to actor Alice Morgan</div>
   </div>
 </div>
 
@@ -1144,46 +1162,29 @@ END IF;</code></pre>
 
   <h2 class="section-title">13.1 Testing Methodology &amp; Automated Test Suite</h2>
   <p>
-    An automated test suite (<code>tests/test_suite.js</code>) validates all 20 mandatory test cases. Command executed:
+    Combined automated suites validate database constraints, procedural math, Phase 3 indexes/reports, DB privilege isolation, CSRF/RBAC HTTP API security (<code>tests/test_suite.js</code>, 21 tests), and live headless Chromium workflows (<code>tests/browser_e2e.test.js</code>, 11 E2E tests):
   </p>
-  <pre><code>npm test</code></pre>
+  <pre><code>npm run test:all</code></pre>
   <pre><code>===============================================================
-PAYTRACE: Executing 20 Mandatory Rubric Test Cases
-Database: paytrace_db
-Timestamp: 2026-11-17T21:16:10.218Z
+PAYTRACE: Executing SQL, Unit &amp; HTTP Integration Test Suite
+Database: paytrace_db @ 127.0.0.1
 ===============================================================
-[✅ PASS] Test 1: Valid employee creation
-[✅ PASS] Test 2: Duplicate employee identifier rejection
-[✅ PASS] Test 3: Negative salary rejection
-[✅ PASS] Test 4: Duplicate attendance entry rejection
-[✅ PASS] Test 5: Invalid attendance state rejection
-[✅ PASS] Test 6: Overlapping approved leave rejection
-[✅ PASS] Test 7: Valid leave application and approval
-[✅ PASS] Test 8: Correct salary calculation formula
-[✅ PASS] Test 9: Correct progressive tax deduction
-[✅ PASS] Test 10: Successful payroll transaction and COMMIT
-[✅ PASS] Test 11: Failed payroll transaction and verified ROLLBACK
-[✅ PASS] Test 12: Correct monthly attendance summary report
-[✅ PASS] Test 13: Correct salary slip itemization report
-[✅ PASS] Test 14: Correct late-marks report
-[✅ PASS] Test 15: Employee access to own records (RBAC)
-[✅ PASS] Test 16: Employee attempt to access other records (Blocked)
-[✅ PASS] Test 17: Employee attempt to perform HR action (Blocked)
-[✅ PASS] Test 18: Unauthorized / Unauthenticated request rejection
-[✅ PASS] Test 19: Boundary conditions for dates and parameters
-[✅ PASS] Test 20: Repeated payroll processing prevention
-===============================================================
-TEST EXECUTION SUMMARY: 20 / 20 PASSED (100% SUCCESS)
+[PASS] SQL-01..SQL-14 : Schema, Triggers, Cross-Month Leave, TDS, Rollback, Indexes, DB Roles (14/14)
+[PASS] UNIT-01..02   : enforceSelfOrAdmin, requireRole, fail-closed validateJwtSecret (2/2)
+[PASS] HTTP-01..05   : Auth, Employee Read-Only &amp; CSRF 403s, IDOR, Validation, HR Lifecycle (5/5)
+---------------------------------------------------------------
+TEST EXECUTION SUMMARY: 21 / 21 PASSED
+BROWSER E2E SUMMARY (Chromium CDP E2E-01..E2E-11): 11 / 11 PASSED (0 Console/Page Errors)
 ===============================================================</code></pre>
 
   <h1 class="chapter-title" style="margin-top: 18pt;">Chapter 14: Deployment, Setup &amp; Evaluator Guide</h1>
 
   <h2 class="section-title">14.1 Quick Start Instructions</h2>
   <ol>
-    <li><strong>Configure Environment:</strong> Copy <code>.env.example</code> to <code>.env</code> with database connection parameters.</li>
-    <li><strong>Provision Database:</strong> Run <code>mariadb -u root -h 127.0.0.1 &lt; database/setup.sql</code> to create tables and seed 12 employees across 3 months.</li>
-    <li><strong>Install Dependencies &amp; Run Tests:</strong> Run <code>npm install</code> followed by <code>npm test</code>.</li>
-    <li><strong>Start Application:</strong> Run <code>npm start</code> and visit <code>http://localhost:3000</code>.</li>
+    <li><strong>Configure Environment:</strong> Copy <code>.env.example</code> to <code>.env</code> with <code>DB_USER=paytrace_app</code> and a unique 32+ character <code>JWT_SECRET</code>.</li>
+    <li><strong>Provision Database (7 Stages):</strong> Run <code>mysql -u root &lt; database/setup.sql</code> to create tables, routines, triggers, indexes, least-privilege views/roles, and sample data (12 employees across 3 months).</li>
+    <li><strong>Install Dependencies &amp; Run Tests:</strong> Run <code>npm install</code> followed by <code>npm run test:all</code>.</li>
+    <li><strong>Start Application:</strong> Run <code>npm start</code> and visit <code>http://127.0.0.1:3000</code> (HR: <code>alice.morgan@paytrace.local</code> / <code>Admin123!</code>; Employee: <code>david.miller@paytrace.local</code> / <code>Employee123!</code>).</li>
   </ol>
   
   <div class="callout callout-warning">
@@ -1243,7 +1244,7 @@ TEST EXECUTION SUMMARY: 20 / 20 PASSED (100% SUCCESS)
       <td><code>POST</code></td>
       <td><code>/api/auth/login</code></td>
       <td>Public</td>
-      <td>Authenticates credentials and returns JWT bearer token</td>
+      <td>Sets <code>HttpOnly</code> <code>token</code> &amp; <code>csrf_token</code> cookies</td>
     </tr>
     <tr>
       <td><code>GET</code></td>
@@ -1255,23 +1256,23 @@ TEST EXECUTION SUMMARY: 20 / 20 PASSED (100% SUCCESS)
       <td><code>GET</code></td>
       <td><code>/api/attendance</code></td>
       <td>Self / <code>HR_ADMIN</code></td>
-      <td>Retrieves monthly attendance logs (anti-tampering enforced)</td>
+      <td>Retrieves attendance logs (employees read-only on own rows)</td>
     </tr>
     <tr>
       <td><code>POST</code></td>
-      <td><code>/api/attendance/clock-in</code></td>
-      <td>Authenticated</td>
-      <td>Records daily clock-in timestamp with punctuality evaluation</td>
+      <td><code>/api/attendance</code></td>
+      <td><code>HR_ADMIN</code> (+CSRF)</td>
+      <td>HR records attendance entry (validated by triggers)</td>
     </tr>
     <tr>
       <td><code>POST</code></td>
       <td><code>/api/payroll/process</code></td>
-      <td><code>HR_ADMIN</code></td>
-      <td>Executes atomic bulk payroll processing for a cycle</td>
+      <td><code>HR_ADMIN</code> (+CSRF)</td>
+      <td>Executes single or bulk cycle processing via SP</td>
     </tr>
     <tr>
       <td><code>GET</code></td>
-      <td><code>/api/payroll/itemized/:id</code></td>
+      <td><code>/api/payroll/slip/:payrollId</code></td>
       <td>Self / <code>HR_ADMIN</code></td>
       <td>Retrieves full itemized salary slip line items</td>
     </tr>
@@ -1279,13 +1280,13 @@ TEST EXECUTION SUMMARY: 20 / 20 PASSED (100% SUCCESS)
       <td><code>GET</code></td>
       <td><code>/api/reports/*</code></td>
       <td><code>HR_ADMIN</code></td>
-      <td>Generates analytical reports (Attendance, Late Marks)</td>
+      <td>Attendance Summary, Late Marks, Departmental &amp; Dashboard KPIs</td>
     </tr>
     <tr>
       <td><code>GET</code></td>
       <td><code>/api/audit-logs</code></td>
       <td><code>HR_ADMIN</code></td>
-      <td>Retrieves immutable audit trail records with JSON diffs</td>
+      <td>Retrieves immutable audit trail records with actor &amp; JSON diffs</td>
     </tr>
   </table>
 

@@ -1,88 +1,83 @@
 graph TB
-    subgraph ClientTier["PRESENTATION LAYER (Single Page Application - Vanilla HTML5/CSS3/JS)"]
+    subgraph ClientTier["PRESENTATION LAYER (Single Page Application - Vanilla HTML5/CSS3/ES6)"]
         direction TB
         subgraph AdminPortal["HR / Admin Portal (role: HR_ADMIN)"]
-            A1["Executive Dashboard (KPIs: Headcount, Gross Liability, Leaves, Late Marks)"]
-            A2["Employee Directory (Roster CRUD & Initial Salary Structure Config)"]
-            A3["Attendance Monitor (Calendar & Late Marks Inspector)"]
-            A4["Leave Approval Hub (Pending Requests, Actions & Remarks)"]
+            A1["Executive Dashboard (Live DB KPIs & Cycles)"]
+            A2["Employee Directory (Create, Edit, Search & Salary Revision Modals)"]
+            A3["Attendance Manager (HR Record, Edit & Late Filters)"]
+            A4["Leave Manager (HR Record, Approve/Reject/Cancel & Overlap Guards)"]
             A5["Payroll Operations (Procedural Single & Bulk Calculation)"]
-            A6["Rollback Tester (Intentional Negative Salary Violation Test)"]
-            A7["Analytical Reports (Attendance Summary, Late Marks, Dept Distribution)"]
-            A8["Audit Trail Viewer (Immutable History with Old/New JSON Diffs)"]
+            A6["Rollback Tester (2-Step Constraint Violation Proof)"]
+            A7["Analytical Reports (Attendance Summary, Late Marks, Departmental)"]
+            A8["Audit Trail Viewer (Immutable History with Actor & JSON Diffs)"]
         end
 
-        subgraph EmployeePortal["Employee Self-Service Portal (role: EMPLOYEE)"]
-            E1["Personal Dashboard (Active Salary Summary & Quick Clock-in)"]
-            E2["Web Punch Clock (Check-In / Out with Late Arrival Evaluation)"]
-            E3["Leave Management (Application Submission & Balance Tracker)"]
-            E4["Itemized Salary Slips (Interactive Frozen Modal & Print View)"]
-            E5["IDOR Self-Isolation (Strict Boundaries Preventing Peer Access)"]
+        subgraph EmployeePortal["Employee Portal (role: EMPLOYEE - Read-Only)"]
+            E1["Personal Dashboard (Own Salary Summary & Recent Logs)"]
+            E2["Own Attendance History (Read-Only Timestamps & Late Flags)"]
+            E3["Own Leave History (Read-Only HR Status Tracking)"]
+            E4["Itemized Salary Slips (Frozen Master & Line-Item Modal + Print)"]
+            E5["Strict Read-Only & IDOR Isolation (All Writes & Peer Access Blocked 403)"]
         end
     end
 
-    subgraph BackendTier["APPLICATION & SECURITY LAYER (Node.js v26+ / Express.js 5+)"]
+    subgraph BackendTier["APPLICATION & SECURITY LAYER (Node.js v26+ / Express 5.3)"]
         direction TB
         subgraph SecurityMiddleware["Security & RBAC Middleware (src/middleware/auth.js)"]
-            M1["authenticateToken (JWT Signature Verification + Active DB Check)"]
-            M2["requireRole('HR_ADMIN') (403 Forbidden Gatekeeper)"]
-            M3["enforceSelfOrAdmin (Anti-Tampering / IDOR Protection)"]
-            M4["bcryptjs (10 Salt Rounds Password Hashing)"]
+            M1["authenticateToken + verifyCsrf (Fail-Closed JWT_SECRET, HttpOnly HS256 Cookie, timingSafeEqual CSRF)"]
+            M2["requireRole('HR_ADMIN') (403 Gatekeeper on Writes, Reports & Audit)"]
+            M3["enforceSelfOrAdmin (Horizontal IDOR Protection)"]
+            M4["bcryptjs (10 Salt Rounds Salted Password Hashing)"]
         end
 
         subgraph APIRoutes["Modular REST API Routers (src/routes/)"]
-            R1["/api/auth (Login, Verify Session /me, Logout)"]
-            R2["/api/employees (Staff Directory & Onboarding)"]
-            R3["/api/salary (Salary Structures & Revisions)"]
-            R4["/api/attendance (Daily Punch Clock & Queries)"]
-            R5["/api/leaves (Applications & Approvals Workflow)"]
-            R6["/api/payroll (Cycles, Slips, /process, /test-rollback)"]
-            R7["/api/reports (Analytical Queries Reports 1-4)"]
-            R8["/api/audit-logs (Security Trail Access)"]
+            R1["/api/auth (/login, /logout, /me, /dashboard)"]
+            R2["/api/employees (Directory, Departments, Create & Edit)"]
+            R3["/api/salary (Effective-Dated Salary Structures & Revisions)"]
+            R4["/api/attendance (Filtered Views, HR Record & Edit)"]
+            R5["/api/leaves (Filtered Views, HR Record & Approvals)"]
+            R6["/api/payroll (/periods, /, /slip/:id, /process, /test-rollback)"]
+            R7["/api/reports (Reports 1-4 & Dashboard KPIs)"]
+            R8["/api/audit-logs (Immutable Audit Trail)"]
         end
 
-        DBPool["mysql2 / promise Connection Pool (KeepAlive: true, Multi-statements: true)"]
+        DBPool["mysql2 / promise Pool (paytrace_app DML+EXEC, dateStrings: ['DATE'], multipleStatements: false)"]
     end
 
-    subgraph DatabaseTier["DATA PERSISTENCE & ENGINE LAYER (MariaDB 13.0+ / MySQL 8.0+ InnoDB)"]
+    subgraph DatabaseTier["DATA PERSISTENCE & ENGINE LAYER (MariaDB 13.0.2 InnoDB)"]
         direction TB
-        subgraph StoredLogic["Stored Procedures & Functions (ACID Transaction Boundaries)"]
-            P1["sp_calculate_payroll (Transaction Boundary, Deductions, TDS, Exit Handler SQLEXCEPTION)"]
-            P2["sp_process_bulk_payroll (Cursor-Driven Batch Loop with Processed/Error Counters)"]
-            P3["sp_demonstrate_transaction_rollback (Negative Salary Test -> Verified ROLLBACK)"]
-            F1["fn_calculate_daily_rate (Deterministic Pro-Rata Daily Rate)"]
-            F2["fn_calculate_monthly_tds (4 Progressive Income Tax Slabs)"]
+        subgraph StoredLogic["Stored Procedures & Functions (database/security.sql Roles)"]
+            P1["sp_calculate_payroll (START TRANSACTION before Snapshot Reads, Proration, Deduction Cap, ROLLBACK Handler)"]
+            P2["sp_process_bulk_payroll (Cursor-Driven Batch Loop with Counters)"]
+            P3["sp_demonstrate_transaction_rollback (2-Step Probe -> ROLLBACK_VERIFIED)"]
+            F1["fn_count_working_days (Mon-Fri Calendar Counter)"]
+            F2["fn_calculate_daily_rate (ROUND Gross / Working Days, 2)"]
+            F3["fn_calculate_monthly_tds (4 Progressive Income Tax Slabs)"]
         end
 
-        subgraph TriggersIndexes["Integrity Triggers & Performance Indexes"]
-            T1["trg_attendance_before_* (Check-Out > In, Leave Conflict, Late >09:15)"]
-            T2["trg_leaves_before_* (Start <= End Date, Overlapping Approved Leave Guard)"]
-            T3["trg_salary_after_update & trg_payrolls_after_insert (JSON Audit Logs)"]
-            I1["idx_attendance_late_lookup (is_late, work_date, late_minutes)"]
-            I2["idx_attendance_period_summary (work_date, status)"]
-            I3["idx_payrolls_period_employee (period_id, employee_id)"]
-            I4["idx_leaves_emp_status_dates (employee_id, status, dates)"]
+        subgraph TriggersIndexes["Integrity Triggers & 4 Phase-3 Indexes"]
+            T1["trg_attendance_before_* (Check-Out >= In, Reject Non-Worked Times, Late >09:15:00)"]
+            T2["trg_leaves_before_* (Mon-Fri total_days, Approved Overlap & Attendance Guards)"]
+            T3["trg_salary_after_* & trg_payrolls_after_insert (JSON Audit Logs w/ @app_actor_id)"]
+            I1["idx_attendance_late_lookup (is_late, work_date)"]
+            I2["idx_attendance_period_summary (work_date, employee_id, status, is_late)"]
+            I3["idx_leaves_emp_status_dates (employee_id, status, start_date, end_date)"]
+            I4["idx_salary_emp_effective (employee_id, effective_date)"]
         end
 
-        subgraph RelationalTables["9 Normalized InnoDB Tables & Analytical Views"]
+        subgraph RelationalTables["9 Normalized Tables, 3 Views & Roles (paytrace_app / paytrace_reader)"]
         direction LR
-            T_DEPT["departments"]
-            T_EMP["employees"]
-            T_SAL["salary_structures"]
-            T_ATT["attendance"]
-            T_LEV["leaves"]
-            T_PER["payroll_periods"]
-            T_PAY["payrolls"]
-            T_ITM["payroll_items"]
-            T_AUD["audit_logs"]
-            REPS["Reports 1-4 Queries"]
+            T_CORE["departments, employees, salary_structures"]
+            T_OPS["attendance, leaves, payroll_periods"]
+            T_PAY["payrolls, payroll_items, audit_logs"]
+            V_SEC["Views: vw_employee_self_profile, vw_employee_attendance_summary, vw_employee_payslip_summary"]
         end
     end
 
-    %% Communication Flow
-    ClientTier -->|"HTTPS / REST (JSON) | Bearer JWT & Cookie"| BackendTier
-    BackendTier -->|"mysql2 Pool Connection | SQL DML & CALL sp_*()"| DatabaseTier
-    StoredLogic -->|"Invokes Deterministic Slabs"| F1
-    StoredLogic -->|"Invokes Deterministic Slabs"| F2
-    StoredLogic -->|"Executes ACID Transactions"| RelationalTables
+    ClientTier -->|"HTTP REST (JSON) | HttpOnly Cookie + X-CSRF-Token"| BackendTier
+    BackendTier -->|"mysql2 Pool (paytrace_app) | SQL DML & CALL sp_*()"| DatabaseTier
+    StoredLogic --> F1
+    StoredLogic --> F2
+    StoredLogic --> F3
+    StoredLogic --> RelationalTables
     TriggersIndexes -.->|"Fires & Logs"| RelationalTables

@@ -5,7 +5,7 @@
 
 ## 1. Dataset Overview
 
-The PayTrace seed dataset models a mid-sized organization across **12 employees**, **5 departments**, and **3 distinct monthly payroll cycles** (June 2026, July 2026, August 2026).
+The PayTrace seed dataset (`database/generate_seed.js` -> `database/seed.sql`) models an organization across **12 employees**, **5 departments**, and **3 consecutive monthly payroll cycles** (June, July, and August 2026).
 
 ---
 
@@ -26,69 +26,48 @@ The PayTrace seed dataset models a mid-sized organization across **12 employees*
 | `EMP011` | Aisha Khan | Operations & Support | Support Specialist | `EMPLOYEE` | $35,000 | $55,000 | $660,000 |
 | `EMP012` | Marcus Vance | Engineering | QA Automation Engineer | `EMPLOYEE` | $55,000 | $85,000 | $1,020,000 |
 
-*Default Credentials for Verification:*
-- HR Admin: `alice.morgan@paytrace.local` / `Admin123!`
-- Employee: `david.miller@paytrace.local` / `Employee123!`
+*Disposable Demonstration Sample Credentials (per-user salted bcrypt hashes):*
+- **HR / Admin:** `alice.morgan@paytrace.local` / `Admin123!`
+- **Employee (Read-Only):** `david.miller@paytrace.local` / `Employee123!`
+- **Employee (Late Penalty Demo):** `sarah.jenkins@paytrace.local` / `Employee123!`
 
 ---
 
-## 3. Payroll Accounting Cycles
+## 3. Payroll Accounting Cycles (Mon–Fri Working Calendar)
 
-1. **June 2026 (`period_id = 1`):**
-   - Start Date: `2026-06-01`, End Date: `2026-06-30`
-   - Total Working Days: 22 days (excluding weekends)
-   - Status: `CLOSED`
-2. **July 2026 (`period_id = 2`):**
-   - Start Date: `2026-07-01`, End Date: `2026-07-31`
-   - Total Working Days: 23 days (excluding weekends)
-   - Status: `CLOSED`
-3. **August 2026 (`period_id = 3`):**
-   - Start Date: `2026-08-01`, End Date: `2026-08-31`
-   - Total Working Days: 22 days (excluding weekends)
-   - Status: `FINALIZED`
+1. **June 2026 (`period_id = 1`):** `2026-06-01` to `2026-06-30` — **22** Mon–Fri working days (`CLOSED`)
+2. **July 2026 (`period_id = 2`):** `2026-07-01` to `2026-07-31` — **23** Mon–Fri working days (`CLOSED`)
+3. **August 2026 (`period_id = 3`):** `2026-08-01` to `2026-08-31` — **21** Mon–Fri working days (`FINALIZED`; Aug 1–2 are Sat–Sun)
 
 ---
 
 ## 4. Attendance & Leave Scenarios Represented
 
-- **792 Total Attendance Records:** Continuous daily weekday attendance logged across all 12 employees over 3 months.
+- **792 Total Attendance Records:** 66 Mon–Fri workdays across 12 employees (`264` in June, `276` in July, `252` in August).
 - **Punctuality Variations:**
-  - `EMP004` (Sarah Jenkins) exhibits chronic late marks in July 2026 (6 late arrivals: July 6, 13, 15, 20, 24, 29), triggering the >3 late threshold penalty (3 penalty marks = $6,521.75).
-  - `EMP008` (Liam Patel) exhibits 4 late arrivals in August 2026, triggering 1 penalty deduction.
-  - `EMP011` (Aisha Khan) exhibits 2 late arrivals in June 2026 (within the 3-day grace threshold, incur $0 penalty).
-- **Absences & Approved Leaves:**
-  - `EMP003` (David Miller): 1 day casual leave on June 12, 1 day paid leave on August 14.
-  - `EMP008` (Liam Patel): 2 days unpaid leave on June 18-19, resulting in 2-day pro-rata deduction.
-  - `EMP007` (Maria Garcia): 1 unexcused absence on June 25, 2 days sick leave on July 27-28.
-  - `EMP011` (Aisha Khan): 2 days unpaid leave on July 15-16.
-- **Workflow Requests:**
-  - 8 Approved leaves across periods.
-  - 1 Rejected leave (`EMP004`, long weekend during release freeze).
-  - 1 Pending leave (`EMP009`, dental appointment).
+  - `EMP004` (Sarah Jenkins): 6 late arrivals in July 2026 (3 beyond grace threshold -> `3 × 0.5 × $4,347.83 = $6,521.75` penalty, net `$79,228.25`).
+  - `EMP008` (Liam Patel): 4 late arrivals in August 2026 (1 beyond grace threshold -> `1 × 0.5 × $4,619.05 = $2,309.53` penalty, total deductions `$15,899.53`, net `$81,100.47`).
+  - `EMP011` (Aisha Khan): 2 late arrivals in June 2026 (within grace threshold -> `$0.00` penalty, net `$48,850.00`).
+- **Absences & Approved Leaves (10 Leave Rows: 8 Approved, 1 Rejected, 1 Pending):**
+  - `EMP003` (David Miller): 1d casual leave (Jun 12), 1d paid leave (Aug 14).
+  - `EMP008` (Liam Patel): 2d unpaid leave (Jun 18–19 -> `$8,818.18` deduction, net `$74,591.82`).
+  - `EMP007` (Maria Garcia): 1 unexcused absence (Jun 25), 2d sick leave (Jul 27–28).
+  - `EMP011` (Aisha Khan): 2d unpaid leave (Jul 15–16).
+  - `EMP004` (Sarah Jenkins): 1d rejected casual leave (Jul 3).
+  - `EMP009` (Chloe Dubois): 1d pending sick leave (Aug 28).
 
 ---
 
-## 5. Seed Execution Summary
+## 5. Verified Clean Seed Row Counts
 
-```sql
-SELECT 'departments' AS tbl, COUNT(*) AS cnt FROM departments
-UNION ALL SELECT 'employees', COUNT(*) FROM employees
-UNION ALL SELECT 'salary_structures', COUNT(*) FROM salary_structures
-UNION ALL SELECT 'payroll_periods', COUNT(*) FROM payroll_periods
-UNION ALL SELECT 'leaves', COUNT(*) FROM leaves
-UNION ALL SELECT 'attendance', COUNT(*) FROM attendance
-UNION ALL SELECT 'payrolls', COUNT(*) FROM payrolls
-UNION ALL SELECT 'payroll_items', COUNT(*) FROM payroll_items
-UNION ALL SELECT 'audit_logs', COUNT(*) FROM audit_logs;
-```
-
-**Result:**
-- `departments`: 5
-- `employees`: 12
-- `salary_structures`: 12
-- `payroll_periods`: 3
-- `leaves`: 10
-- `attendance`: 792
-- `payrolls`: 36 (All 12 employees across 3 months)
-- `payroll_items`: 221
-- `audit_logs`: 36
+| Table | Verified Row Count | Notes |
+| :--- | :---: | :--- |
+| `departments` | 5 | Engineering, HR, Finance, Marketing, Operations |
+| `employees` | 12 | 2 `HR_ADMIN`, 10 `EMPLOYEE` |
+| `salary_structures` | 12 | Effective-dated baseline packages |
+| `payroll_periods` | 3 | June (22d), July (23d), August (21d) 2026 |
+| `leaves` | 10 | 8 `APPROVED`, 1 `REJECTED`, 1 `PENDING` |
+| `attendance` | 792 | `66 × 12` weekday logs |
+| `payrolls` | 36 | `12 × 3` calculated cycles via `sp_process_bulk_payroll` |
+| `payroll_items` | 221 | Normalized itemized earnings & deductions |
+| `audit_logs` | 48 | 12 `salary_structures` inserts + 36 `payrolls` inserts |

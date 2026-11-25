@@ -11,7 +11,7 @@ The PayTrace relational database model consists of 9 normalized entities designe
 
 ![PayTrace Relational ER Diagram](../assets/diagrams/er-diagram.svg)
 
-*High-resolution downloads:* [[Vector SVG Format]](../assets/diagrams/er-diagram.svg) • [[High-DPI PNG Format (4948 × 3657 px)]](../assets/diagrams/er-diagram.png) • [[Graphviz DOT Source]](../assets/diagrams/er-diagram.dot) • [[Mermaid Source]](../assets/diagrams/er-diagram.mermaid)
+*High-resolution downloads:* [[Vector SVG Format]](../assets/diagrams/er-diagram.svg) • [[High-DPI PNG Format]](../assets/diagrams/er-diagram.png) • [[Graphviz DOT Source]](../assets/diagrams/er-diagram.dot) • [[Mermaid Source]](../assets/diagrams/er-diagram.mermaid)
 
 ---
 
@@ -23,13 +23,13 @@ erDiagram
     EMPLOYEES ||--o{ SALARY_STRUCTURES : "has"
     EMPLOYEES ||--o{ ATTENDANCE : "logs"
     EMPLOYEES ||--o{ LEAVES : "requests"
-    EMPLOYEES ||--o{ LEAVES : "approves / actions"
+    EMPLOYEES |o--o{ LEAVES : "approves / actions"
     EMPLOYEES ||--o{ PAYROLLS : "receives"
     EMPLOYEES ||--o{ PAYROLLS : "processes"
-    EMPLOYEES ||--o{ AUDIT_LOGS : "triggers"
+    EMPLOYEES |o--o{ AUDIT_LOGS : "triggers"
     PAYROLL_PERIODS ||--o{ PAYROLLS : "contains"
     SALARY_STRUCTURES ||--o{ PAYROLLS : "referenced_in"
-    PAYROLLS ||--|{ PAYROLL_ITEMS : "breaks_down_into"
+    PAYROLLS ||--o{ PAYROLL_ITEMS : "breaks_down_into"
 
     DEPARTMENTS {
         int department_id PK
@@ -71,8 +71,8 @@ erDiagram
 
     ATTENDANCE {
         int attendance_id PK
-        int employee_id FK
-        date work_date
+        int employee_id FK,UK
+        date work_date UK
         enum status
         time check_in_time
         time check_out_time
@@ -110,8 +110,8 @@ erDiagram
 
     PAYROLLS {
         int payroll_id PK
-        int employee_id FK
-        int period_id FK
+        int employee_id FK,UK
+        int period_id FK,UK
         int salary_id FK
         decimal present_days
         decimal approved_paid_leave_days
@@ -152,36 +152,33 @@ erDiagram
 
 ## Relationships & Cardinalities
 
-1. **`DEPARTMENTS` to `EMPLOYEES` (1 : M)**
-   - One department has zero, one, or many employees.
-   - Each employee must belong to exactly one department (`department_id` NOT NULL).
-   - Referential action: `ON DELETE RESTRICT` prevents accidental deletion of departments with active staff.
-
-2. **`EMPLOYEES` to `SALARY_STRUCTURES` (1 : M)**
-   - One employee has one or more salary structures over time (effective-dated revision history).
-   - Only one record has `is_active = TRUE` for current calculations.
-   - Referential action: `ON DELETE CASCADE`.
-
-3. **`EMPLOYEES` to `ATTENDANCE` (1 : M)**
-   - One employee has zero, one, or many daily attendance logs.
-   - Natural uniqueness enforced on composite key `(employee_id, work_date)`.
-   - Referential action: `ON DELETE CASCADE`.
-
-4. **`EMPLOYEES` to `LEAVES` (1 : M)**
-   - As Applicant: One employee submits zero, one, or many leave requests.
-   - As Approver (`actioned_by`): HR/Admin employee reviews requests (`ON DELETE SET NULL`).
-   - Overlap prevention enforced via trigger and application logic.
-
-5. **`PAYROLL_PERIODS` to `PAYROLLS` (1 : M)**
-   - One payroll period contains zero, one, or many processed employee payroll records.
-   - Uniqueness enforced on `(employee_id, period_id)` so an employee is paid exactly once per period.
-   - Referential action: `ON DELETE RESTRICT`.
-
-6. **`PAYROLLS` to `PAYROLL_ITEMS` (1 : M)**
-   - One finalized payroll record breaks down into multiple itemized earnings and deductions line items.
-   - Ensures fully explainable payslip reporting.
-   - Referential action: `ON DELETE CASCADE`.
-
-7. **`EMPLOYEES` to `AUDIT_LOGS` (1 : M)**
-   - Critical updates (salary revisions, payroll processing, attendance adjustments) log the actor who made the change.
-   - Referential action: `ON DELETE SET NULL` ensures audit trails persist even if an employee record is deactivated or removed.
+1. **`DEPARTMENTS` to `EMPLOYEES` (1 : 0..N)**
+   - One department employs zero, one, or many employees; each employee belongs to exactly one department (`department_id NOT NULL`).
+   - Referential action: `ON DELETE RESTRICT`, `ON UPDATE CASCADE`.
+2. **`EMPLOYEES` to `SALARY_STRUCTURES` (1 : 0..N)**
+   - One employee has zero, one, or many effective-dated salary configurations over time.
+   - Referential action: `ON DELETE CASCADE`, `ON UPDATE CASCADE`.
+3. **`EMPLOYEES` to `ATTENDANCE` (1 : 0..N)**
+   - One employee has zero, one, or many daily attendance logs; uniqueness enforced via `UNIQUE (employee_id, work_date)`.
+   - Referential action: `ON DELETE CASCADE`, `ON UPDATE CASCADE`.
+4. **`EMPLOYEES` to `LEAVES` — Applicant (1 : 0..N)**
+   - One employee has zero, one, or many leave records (`employee_id NOT NULL`).
+   - Referential action: `ON DELETE CASCADE`, `ON UPDATE CASCADE`.
+5. **`EMPLOYEES` to `LEAVES` — Approver (0..1 : 0..N)**
+   - Nullable `actioned_by` references the HR/Admin employee who actioned the request (`NULL` while `PENDING`).
+   - Referential action: `ON DELETE SET NULL`, `ON UPDATE CASCADE`.
+6. **`EMPLOYEES` to `PAYROLLS` — Recipient & Processor (1 : 0..N)**
+   - Both `employee_id` (recipient) and `processed_by` (HR/Admin actor) are `NOT NULL` references to `employees`.
+   - Referential action: `ON DELETE RESTRICT`, `ON UPDATE CASCADE`.
+7. **`PAYROLL_PERIODS` to `PAYROLLS` (1 : 0..N)**
+   - One payroll period contains zero, one, or many employee payroll records; uniqueness enforced via `UNIQUE (employee_id, period_id)`.
+   - Referential action: `ON DELETE RESTRICT`, `ON UPDATE CASCADE`.
+8. **`SALARY_STRUCTURES` to `PAYROLLS` (1 : 0..N)**
+   - Each payroll record references the effective `salary_id` (`NOT NULL`) used for that cycle.
+   - Referential action: `ON DELETE RESTRICT`, `ON UPDATE CASCADE`.
+9. **`PAYROLLS` to `PAYROLL_ITEMS` (1 : 0..N)**
+   - Each payroll header links to itemized earnings and deductions in `payroll_items`.
+   - Referential action: `ON DELETE CASCADE`, `ON UPDATE CASCADE`.
+10. **`EMPLOYEES` to `AUDIT_LOGS` (0..1 : 0..N)**
+    - Nullable `actor_employee_id` records the executing employee when available (`NULL` for system/direct SQL actions).
+    - Referential action: `ON DELETE SET NULL`, `ON UPDATE CASCADE`.

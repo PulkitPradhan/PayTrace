@@ -1,93 +1,58 @@
-# PayTrace — Academic Evaluation & Demonstration Script (Phase 5)
+# PayTrace — Live Capstone Demonstration Script (Phase 5)
 
 **Author:** Pulkit Pradhan  
 **Roll Number:** 2501730036  
-
-## 1. Overview for Evaluator / Professor
-
-This script provides a structured, verifiable demonstration sequence designed to prove compliance with all five phases of the PayTrace Capstone Specification (100 Marks total).
+**Target Environment:** Fresh MariaDB `paytrace_db` + Running Express 5 UI (`http://127.0.0.1:3000`)
 
 ---
 
-## 2. Step-by-Step Demonstration Sequence
+## Step 1: Schema & Relational Integrity Proof (Phase 1)
 
-### Step 1: Relational Database Schema & Integrity (Phase 1 — 20 Marks)
-1. **Show Tables:** Open terminal or MariaDB client and execute:
-   ```sql
-   USE paytrace_db;
-   SHOW TABLES;
-   ```
-   *Verification:* Exactly 9 normalized tables created in InnoDB engine (`departments`, `employees`, `salary_structures`, `attendance`, `leaves`, `payroll_periods`, `payrolls`, `payroll_items`, `audit_logs`).
-2. **Show Constraints:** Point to foreign keys, check constraints (`chk_salary_basic >= 0`, `chk_leave_dates`), and unique keys (`uq_emp_work_date`, `uq_emp_payroll_period`).
-3. **Show Documentation & Diagram:** Present `docs/phase-1/schema-design.md`, `docs/phase-1/normalization.md` proving 3NF / BCNF, and the exported visual diagram:
-   - Visual Diagram: [docs/assets/diagrams/er-diagram.svg](../assets/diagrams/er-diagram.svg) (High-DPI PNG: [er-diagram.png](../assets/diagrams/er-diagram.png)).
+1. Open [`docs/assets/diagrams/er-diagram.svg`](../assets/diagrams/er-diagram.svg) and verify the 9-table 3NF model (`departments`, `employees`, `salary_structures`, `attendance`, `leaves`, `payroll_periods`, `payrolls`, `payroll_items`, `audit_logs`).
+2. Highlight immutable historical design: `payrolls` stores both `salary_id` (the effective structure selected on `effective_date <= period.end_date`) and itemized snapshots in `payroll_items`.
+3. Optionally verify schema immutability checksum: `sha256sum database/schema.sql`.
 
 ---
 
-### Step 2: Procedural Implementation & Data Seeding (Phase 2 — 20 Marks)
-1. **Show Stored Programs:**
-   ```sql
-   SHOW FUNCTION STATUS WHERE Db = 'paytrace_db';
-   SHOW PROCEDURE STATUS WHERE Db = 'paytrace_db';
-   SHOW TRIGGERS;
-   ```
-   *Verification:* Stored functions `fn_calculate_daily_rate`, `fn_calculate_monthly_tds`; stored procedures `sp_calculate_payroll`, `sp_process_bulk_payroll`, `sp_demonstrate_transaction_rollback`; and validation triggers.
-   - Lifecycle Diagram: [docs/assets/diagrams/payroll-transaction-workflow.svg](../assets/diagrams/payroll-transaction-workflow.svg)
-2. **Show Sample Dataset:**
-   ```sql
-   SELECT 'Employees' AS entity, COUNT(*) AS count FROM employees
-   UNION ALL SELECT 'Periods', COUNT(*) FROM payroll_periods
-   UNION ALL SELECT 'Attendance Days', COUNT(*) FROM attendance
-   UNION ALL SELECT 'Finalized Payrolls', COUNT(*) FROM payrolls;
-   ```
-   *Verification:* 12 employees (exceeds minimum of 10) across 3 distinct months (June, July, August 2026), 792 daily attendance records, and 36 finalized payrolls.
+## Step 2: Procedural Logic, Triggers & Sample Dataset Proof (Phase 2)
+
+Diagram reference: [`docs/assets/diagrams/payroll-transaction-workflow.svg`](../assets/diagrams/payroll-transaction-workflow.svg)
+
+1. Confirm 3-month Mon–Fri dataset counts directly in MariaDB:
+   - June 2026 (`22` working days), July 2026 (`23` working days), August 2026 (`21` working days)
+   - `12` employees, `792` attendance records, `10` leaves, `36` payrolls, `221` payroll line-items.
+2. Demonstrate trigger validation in SQL:
+   - `09:15:00` check-in is `is_late = 0`, whereas `09:15:01` sets `is_late = 1, late_minutes = 15`.
+   - `leaves` overlapping an `APPROVED` leave (on `INSERT` or `UPDATE`) aborts with `SQLSTATE '45000'`.
 
 ---
 
-### Step 3: Mandatory Reports & Query Optimization (Phase 3 — 20 Marks)
-1. **Report 1 (Monthly Attendance Summary):**
-   Navigate to **Reports & Analytics** -> **Monthly Attendance Summary** (or execute `database/reports.sql`). Show 12 active employees aggregated cleanly without Cartesian row duplication.
-   - Live Capture: [docs/assets/screenshots/09-monthly-attendance-report.png](../assets/screenshots/09-monthly-attendance-report.png)
-2. **Report 2 (Itemized Salary Slip):**
-   Open Sarah Jenkins (`EMP004`), July 2026. Explain the exact mathematical breakdown:
-   - Base monthly earnings: $100,000.00
-   - July working days: 23 days ($\text{Daily Rate} = \$4,347.83$)
-   - Sarah had 6 late marks (3 beyond grace threshold). Penalty $= 3 \times (0.5 \times \$4,347.83) = \$6,521.75$
-   - Total Deductions $= \text{PF } (\$7,800) + \text{PT } (\$200) + \text{Late Penalty } (\$6,521.75) + \text{TDS } (\$6,250) = \$20,771.75$
-   - Net Salary $= \$100,000.00 - \$20,771.75 = \$79,228.25$.
-   - Live Capture: [docs/assets/screenshots/08-itemized-salary-slip.png](../assets/screenshots/08-itemized-salary-slip.png)
-3. **Report 3 (Late-Marks Report):**
-   Show late arrivals ordered by tardiness.
-   - Live Capture: [docs/assets/screenshots/10-late-marks-report.png](../assets/screenshots/10-late-marks-report.png)
-4. **Query Optimization Evidence:**
-   Show `docs/phase-3/query-optimization.md`. Highlight before-and-after `EXPLAIN FORMAT=JSON`:
-   - Before: Table scan on `departments`, filesort with `temporary_table`.
-   - After index `idx_attendance_late_lookup`: `attendance` becomes driving range table, `temporary_table` is **ELIMINATED**, and downstream joins use single-row `eq_ref` primary key seeks.
+## Step 3: Mandatory Phase 3 Reports & Query Optimization
+
+1. Sign in as **HR Admin (`alice.morgan@paytrace.local`)** -> **Payroll Processing** -> **July 2026** -> click **View Slip** for **Sarah Jenkins (`EMP004`)**.
+   ![Sarah Jenkins July 2026 Salary Slip](../assets/screenshots/08-itemized-salary-slip.png)
+   - Show exact itemized reconciliation: Gross `$100,000.00`, PF `$7,800.00`, PT `$200.00`, Late Penalty `$6,521.75` (`3` penalty half-days over `23` working days), TDS `$6,250.00`, Net `$79,228.25`.
+   - Equivalent API check: `GET /api/payroll/slip/16`.
+2. Open **Reports & Analytics** (`July 2026`):
+   - **Report 1 — Monthly Attendance Summary:** `12` employees, `23` working days, accurate `HALF_DAY` (0.5) handling and attendance percentages.
+   - **Report 3 — Late-Marks Report:** `19` late arrivals in July (`6` for `EMP004`), backed by `idx_attendance_late_lookup(is_late, work_date)`.
+   ![Late Marks Report](../assets/screenshots/10-late-marks-report.png)
+3. Reference reproducible `EXPLAIN` & `ANALYZE FORMAT=JSON` results in [`docs/phase-3/query-optimization.md`](../phase-3/query-optimization.md): indexed range scan reduces optimizer cost by `93.5%` on the 792-row dataset and `99.3%` (`11.9x` faster median query latency) at 50,000 rows.
 
 ---
 
-### Step 4: Security, RBAC & Transaction Safety (Phase 4 — 20 Marks)
-1. **Run Automated Test Suite:**
-   In terminal, run:
+## Step 4: Security, RBAC, CSRF, Transaction Rollback & Automated Suite (Phase 4)
+
+1. From the HR Dashboard, click **Test Rollback** (`POST /api/payroll/test-rollback` -> `sp_demonstrate_transaction_rollback`):
+   ![Rollback Verification Demo](../assets/screenshots/13-rollback-demo.png)
+   - Confirm `ROLLBACK_VERIFIED` modal and verify zero residual rows from the multi-step probe (`__ROLLBACK_PROBE_DEPT__` + negative payroll insert).
+2. Switch to **Employees** -> open **History / Revise** salary (`12-salary-management.png`), submit a salary revision, then inspect **Audit Trail** (`14-audit-trail.png`) to show `@app_actor_id` attribution (`Alice Morgan`) on both the old structure deactivation (`UPDATE`) and new structure activation (`INSERT`).
+3. Log out and sign in as **David Miller (`EMP003`, `EMPLOYEE`)** (`03-employee-dashboard.png`):
+   - Show that admin nav items and write controls are absent (Employee is strictly read-only).
+   - Attempt cross-employee slip read `GET /api/payroll/slip/16` (from console or curl) to demonstrate `403 Forbidden`:
+   ![Access Denied 403](../assets/screenshots/11-access-denied-behavior.png)
+4. Run the full automated verification suite from terminal:
    ```bash
-   npm test
+   npm run test:all
    ```
-   *Verification:* All 20 / 20 mandatory test cases pass with green output.
-2. **Live RBAC Cross-Employee Denial:**
-   Login as David Miller (`david.miller@paytrace.local`). Attempt to fetch Sarah Jenkins' slip (`/api/payroll/itemized/16`).
-   *Verification:* Response is immediately blocked with `403 Forbidden` (`Access denied: You are not authorized to view other employees' salary slips.`).
-   - Live Capture: [docs/assets/screenshots/11-access-denied-behavior.png](../assets/screenshots/11-access-denied-behavior.png)
-3. **Live Transaction Rollback:**
-   From the HR Admin dashboard, click **"🧪 Test Rollback"** -> **"Run Rollback Demo"**.
-   *Verification:* Live output returns `ROLLBACK_VERIFIED`, proving `sp_demonstrate_transaction_rollback` caught the constraint violation and safely rolled back.
-
----
-
-### Step 5: Full-Stack Integration & Presentation (Phase 5 — 20 Marks)
-1. Open web application at `http://localhost:3000`.
-   - Architecture Diagram: [docs/assets/diagrams/system-architecture.svg](../assets/diagrams/system-architecture.svg)
-2. Demonstrate HR Admin portal: browse employee directory, review and approve leave requests, inspect audit trail with JSON snapshots.
-   - Captures: [02-hr-dashboard.png](../assets/screenshots/02-hr-dashboard.png), [04-employee-roster.png](../assets/screenshots/04-employee-roster.png), [07-payroll-processing.png](../assets/screenshots/07-payroll-processing.png).
-3. Switch user to Employee portal: demonstrate personal dashboard, self-service clock-in, leave application, and printable itemized salary slip modal.
-   - Captures: [01-login.png](../assets/screenshots/01-login.png), [03-employee-dashboard.png](../assets/screenshots/03-employee-dashboard.png), [05-attendance-management.png](../assets/screenshots/05-attendance-management.png), [06-leave-workflow.png](../assets/screenshots/06-leave-workflow.png).
-4. Show that UI connects directly to live Express backend and MariaDB database without hardcoded values.
+   Confirm `21 / 21 PASSED` (SQL/Unit/HTTP) and `11 / 11 PASSED` (Chromium Browser E2E).
