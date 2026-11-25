@@ -1,28 +1,43 @@
 const express = require('express');
 const pool = require('../config/db');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { authenticateToken, verifyCsrf, requireRole, parsePositiveInt } = require('../middleware/auth');
+const { isValidDateString, countWorkingDays } = require('../utils/validators');
 
 const router = express.Router();
 router.use(authenticateToken);
+router.use(verifyCsrf);
 
-// GET /api/leaves (HR_ADMIN sees all; Employee sees only their own)
+// GET /api/leaves (HR_ADMIN sees all or filters; Employee sees only their own)
 router.get('/', async (req, res) => {
   let { employeeId, status } = req.query;
 
-  // Enforce self-access for employees; reject attempts to query other employees
-  if (req.user.role !== 'HR_ADMIN') {
-    if (employeeId && parseInt(employeeId, 10) !== req.user.employee_id) {
+  if (employeeId !== undefined && employeeId !== '') {
+    const parsedEmp = parsePositiveInt(employeeId);
+    if (!parsedEmp) {
+      return res.status(400).json({ success: false, error: 'Invalid employeeId filter.' });
+    }
+    if (req.user.role !== 'HR_ADMIN' && parsedEmp !== req.user.employee_id) {
       return res.status(403).json({
         success: false,
         error: 'Access denied: Employees can access only their own authorized records.'
       });
     }
+    employeeId = parsedEmp;
+  } else if (req.user.role !== 'HR_ADMIN') {
     employeeId = req.user.employee_id;
+  } else {
+    employeeId = null;
+  }
+
+  if (status !== undefined && status !== '') {
+    if (typeof status !== 'string' || !['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'].includes(status)) {
+      return res.status(400).json({ success: false, error: 'Invalid leave status filter.' });
+    }
   }
 
   try {
     let query = `
-      SELECT 
+      SELECT
         l.leave_id, l.employee_id, e.employee_code,
         CONCAT(e.first_name, ' ', e.last_name) AS full_name,
         d.department_name, l.leave_type, l.start_date, l.end_date,
@@ -47,7 +62,7 @@ router.get('/', async (req, res) => {
       params.push(status);
     }
 
-    query += ' ORDER BY l.applied_on DESC LIMIT 200';
+    query += ' ORDER BY l.applied_on DESC, l.leave_id DESC LIMIT 200';
 
     const [rows] = await pool.query(query, params);
     res.json({ success: true, count: rows.length, leaves: rows });
@@ -57,51 +72,104 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/leaves (Submit leave application)
-router.post('/', async (req, res) => {
-  const employeeId = req.user.employee_id;
-  const { leave_type, start_date, end_date, total_days, reason } = req.body;
+// POST /api/leaves (HR_ADMIN only: Record leave request with trusted working-day duration)
+router.post('/', requireRole('HR_ADMIN'), async (req, res) => {
+  const { employee_id, leave_type, start_date, end_date, total_days, reason, status = 'PENDING' } = req.body || {};
 
-  if (!leave_type || !start_date || !end_date || !total_days || !reason) {
-    return res.status(400).json({ success: false, error: 'Missing mandatory leave fields.' });
+  const targetEmpId = parsePositiveInt(employee_id);
+  if (!targetEmpId) {
+    return res.status(400).json({ success: false, error: 'Valid employee_id is required.' });
+  }
+
+  if (!['CASUAL', 'SICK', 'PAID', 'UNPAID'].includes(leave_type)) {
+    return res.status(400).json({ success: false, error: 'leave_type must be CASUAL, SICK, PAID, or UNPAID.' });
+  }
+
+  if (!isValidDateString(start_date) || !isValidDateString(end_date)) {
+    return res.status(400).json({ success: false, error: 'Valid start_date and end_date (YYYY-MM-DD) are required.' });
+  }
+
+  if (start_date > end_date) {
+    return res.status(400).json({ success: false, error: 'Invalid dates: start_date cannot be after end_date.' });
+  }
+
+  if (typeof reason !== 'string' || !reason.trim()) {
+    return res.status(400).json({ success: false, error: 'Reason is required.' });
+  }
+
+  if (!['PENDING', 'APPROVED'].includes(status)) {
+    return res.status(400).json({ success: false, error: 'Initial leave status must be PENDING or APPROVED.' });
+  }
+
+  const computedDays = countWorkingDays(start_date.trim(), end_date.trim());
+  if (computedDays <= 0) {
+    return res.status(400).json({ success: false, error: 'Selected date range contains zero Mon-Fri working days.' });
+  }
+
+  if (total_days !== undefined && total_days !== null && Number(total_days) !== computedDays) {
+    return res.status(400).json({
+      success: false,
+      error: `Invalid leave duration: working days in range is ${computedDays}, received ${total_days}.`
+    });
   }
 
   try {
+    const [empRows] = await pool.query('SELECT employee_id FROM employees WHERE employee_id = ?', [targetEmpId]);
+    if (empRows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Employee not found.' });
+    }
+
+    const actionedBy = status === 'APPROVED' ? req.user.employee_id : null;
+    const actionedOn = status === 'APPROVED' ? new Date() : null;
+    const adminRemarks = status === 'APPROVED' ? 'Recorded and approved by HR Admin' : null;
+
     const [result] = await pool.query(
-      `INSERT INTO leaves (employee_id, leave_type, start_date, end_date, total_days, reason, status)
-       VALUES (?, ?, ?, ?, ?, ?, 'PENDING')`,
-      [employeeId, leave_type, start_date, end_date, total_days, reason.trim()]
+      `INSERT INTO leaves (employee_id, leave_type, start_date, end_date, total_days, reason, status, actioned_by, actioned_on, admin_remarks)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [targetEmpId, leave_type, start_date.trim(), end_date.trim(), computedDays, reason.trim(), status, actionedBy, actionedOn, adminRemarks]
     );
 
     res.status(201).json({
       success: true,
-      message: 'Leave application submitted successfully.',
-      leave_id: result.insertId
+      message: 'Leave record created successfully.',
+      leave_id: result.insertId,
+      total_days: computedDays
     });
   } catch (err) {
-    console.error('Apply leave error:', err);
-    if (err.message && (err.message.includes('chk_leave_dates') || err.message.includes('start_date cannot be after end_date'))) {
-      return res.status(400).json({ success: false, error: 'Invalid dates: start date cannot be after end date.' });
+    console.error('Create leave error:', err);
+    if (err.sqlState === '45000' && err.message && (err.message.includes('Conflicting leave') || err.message.includes('Conflicting attendance'))) {
+      return res.status(409).json({ success: false, error: err.sqlMessage || err.message });
     }
-    res.status(500).json({ success: false, error: 'Failed to submit leave request due to an internal server error.' });
+    if (err.sqlState === '45000' || err.errno === 4025) {
+      return res.status(400).json({ success: false, error: err.sqlMessage || err.message });
+    }
+    res.status(500).json({ success: false, error: 'Failed to create leave record due to an internal server error.' });
   }
 });
 
-// PUT /api/leaves/:leaveId/status (HR_ADMIN only: Approve or Reject)
+// PUT /api/leaves/:leaveId/status (HR_ADMIN only: Approve, Reject, or Cancel)
 router.put('/:leaveId/status', requireRole('HR_ADMIN'), async (req, res) => {
-  const leaveId = parseInt(req.params.leaveId, 10);
-  const { status, admin_remarks } = req.body;
+  const leaveId = parsePositiveInt(req.params.leaveId);
+  if (!leaveId) {
+    return res.status(400).json({ success: false, error: 'Invalid leaveId.' });
+  }
 
+  const { status, admin_remarks } = req.body || {};
   if (!['APPROVED', 'REJECTED', 'CANCELLED'].includes(status)) {
     return res.status(400).json({ success: false, error: 'Invalid leave status.' });
   }
 
   try {
+    const [existing] = await pool.query('SELECT leave_id, status FROM leaves WHERE leave_id = ?', [leaveId]);
+    if (existing.length === 0) {
+      return res.status(404).json({ success: false, error: 'Leave request not found.' });
+    }
+
     await pool.query(
-      `UPDATE leaves 
+      `UPDATE leaves
        SET status = ?, actioned_by = ?, actioned_on = NOW(), admin_remarks = ?
        WHERE leave_id = ?`,
-      [status, req.user.employee_id, admin_remarks ? admin_remarks.trim() : null, leaveId]
+      [status, req.user.employee_id, typeof admin_remarks === 'string' && admin_remarks.trim() ? admin_remarks.trim() : null, leaveId]
     );
 
     res.json({
@@ -110,11 +178,14 @@ router.put('/:leaveId/status', requireRole('HR_ADMIN'), async (req, res) => {
     });
   } catch (err) {
     console.error('Update leave status error:', err);
-    if (err.message && err.message.includes('Conflicting leave: overlapping approved leave')) {
+    if (err.sqlState === '45000' && err.message && (err.message.includes('Conflicting leave') || err.message.includes('Conflicting attendance'))) {
       return res.status(409).json({
         success: false,
-        error: 'Cannot approve leave: Overlapping approved leave already exists for this employee.'
+        error: err.sqlMessage || 'Cannot approve leave: Conflicting approved leave or attendance record exists.'
       });
+    }
+    if (err.sqlState === '45000') {
+      return res.status(400).json({ success: false, error: err.sqlMessage || err.message });
     }
     res.status(500).json({ success: false, error: 'Failed to update leave status due to an internal server error.' });
   }

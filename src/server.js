@@ -1,6 +1,11 @@
 const dotenv = require('dotenv');
 dotenv.config();
 
+const { getJwtSecret } = require('./middleware/auth');
+
+// Fail closed at startup if JWT_SECRET is missing, short, or blacklisted
+getJwtSecret();
+
 const app = require('./app');
 
 const PORT = process.env.PORT || 3000;

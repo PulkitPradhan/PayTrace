@@ -1,16 +1,17 @@
 const express = require('express');
 const pool = require('../config/db');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { authenticateToken, verifyCsrf, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(authenticateToken);
+router.use(verifyCsrf);
 router.use(requireRole('HR_ADMIN'));
 
 // GET /api/audit-logs (HR_ADMIN only)
 router.get('/', async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT 
+      SELECT
         a.log_id, a.table_name, a.record_id, a.action,
         a.actor_employee_id,
         CONCAT(e.first_name, ' ', e.last_name) AS actor_name,

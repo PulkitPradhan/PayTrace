@@ -1,10 +1,71 @@
 const express = require('express');
 const pool = require('../config/db');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { authenticateToken, verifyCsrf, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(authenticateToken);
+router.use(verifyCsrf);
 router.use(requireRole('HR_ADMIN'));
+
+// GET /api/reports/dashboard-summary (HR_ADMIN only: Live KPI metrics)
+router.get('/dashboard-summary', async (req, res) => {
+  try {
+    const [[empMetrics]] = await pool.query(`
+      SELECT
+        COUNT(DISTINCT e.employee_id) AS active_employees,
+        COUNT(DISTINCT e.department_id) AS department_count,
+        COALESCE(SUM(COALESCE(s.basic_salary, 0) + COALESCE(s.hra, 0) + COALESCE(s.special_allowance, 0)), 0.00) AS monthly_gross_liability
+      FROM employees e
+      LEFT JOIN salary_structures s ON s.salary_id = (
+        SELECT s2.salary_id
+        FROM salary_structures s2
+        WHERE s2.employee_id = e.employee_id AND s2.is_active = TRUE
+        ORDER BY s2.effective_date DESC, s2.salary_id DESC
+        LIMIT 1
+      )
+      WHERE e.status = 'ACTIVE'
+    `);
+
+    const [[leaveMetrics]] = await pool.query(
+      "SELECT COUNT(*) AS pending_leaves FROM leaves WHERE status = 'PENDING'"
+    );
+
+    const [periodRows] = await pool.query(
+      'SELECT period_id, period_name, start_date, end_date FROM payroll_periods ORDER BY start_date DESC LIMIT 1'
+    );
+
+    let lateCount = 0;
+    let latestPeriodName = 'Current Cycle';
+    if (periodRows.length > 0) {
+      latestPeriodName = periodRows[0].period_name;
+      const [[lateRow]] = await pool.query(
+        `SELECT COUNT(*) AS late_count
+         FROM attendance
+         WHERE work_date BETWEEN ? AND ?
+           AND is_late = TRUE
+           AND check_in_time IS NOT NULL
+           AND status IN ('PRESENT', 'HALF_DAY')`,
+        [periodRows[0].start_date, periodRows[0].end_date]
+      );
+      lateCount = lateRow.late_count;
+    }
+
+    res.json({
+      success: true,
+      summary: {
+        active_employees: empMetrics.active_employees,
+        department_count: empMetrics.department_count,
+        monthly_gross_liability: empMetrics.monthly_gross_liability,
+        pending_leaves: leaveMetrics.pending_leaves,
+        late_arrivals_latest: lateCount,
+        latest_period_name: latestPeriodName
+      }
+    });
+  } catch (err) {
+    console.error('HR dashboard summary error:', err);
+    res.status(500).json({ success: false, error: 'Failed to load dashboard metrics.' });
+  }
+});
 
 function parsePositiveInt(val) {
   if (val === undefined) return 2;

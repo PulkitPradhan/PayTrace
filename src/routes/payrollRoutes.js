@@ -1,9 +1,10 @@
 const express = require('express');
 const pool = require('../config/db');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { authenticateToken, verifyCsrf, requireRole, parsePositiveInt } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(authenticateToken);
+router.use(verifyCsrf);
 
 // GET /api/payroll/periods
 router.get('/periods', async (req, res) => {
@@ -15,24 +16,39 @@ router.get('/periods', async (req, res) => {
   }
 });
 
-// GET /api/payroll (HR_ADMIN sees all; Employee sees only their own)
+// GET /api/payroll (HR_ADMIN sees all or filters; Employee sees only their own)
 router.get('/', async (req, res) => {
   let { employeeId, periodId } = req.query;
 
-  // Enforce self-access for employees; reject attempts to query other employees
-  if (req.user.role !== 'HR_ADMIN') {
-    if (employeeId && parseInt(employeeId, 10) !== req.user.employee_id) {
+  if (employeeId !== undefined && employeeId !== '') {
+    const parsedEmp = parsePositiveInt(employeeId);
+    if (!parsedEmp) {
+      return res.status(400).json({ success: false, error: 'Invalid employeeId filter.' });
+    }
+    if (req.user.role !== 'HR_ADMIN' && parsedEmp !== req.user.employee_id) {
       return res.status(403).json({
         success: false,
         error: 'Access denied: Employees can access only their own authorized records.'
       });
     }
+    employeeId = parsedEmp;
+  } else if (req.user.role !== 'HR_ADMIN') {
     employeeId = req.user.employee_id;
+  } else {
+    employeeId = null;
+  }
+
+  let parsedPeriodId = null;
+  if (periodId !== undefined && periodId !== '') {
+    parsedPeriodId = parsePositiveInt(periodId);
+    if (!parsedPeriodId) {
+      return res.status(400).json({ success: false, error: 'Invalid periodId filter.' });
+    }
   }
 
   try {
     let query = `
-      SELECT 
+      SELECT
         p.payroll_id, p.employee_id, e.employee_code,
         CONCAT(e.first_name, ' ', e.last_name) AS full_name,
         d.department_name, e.designation,
@@ -53,9 +69,9 @@ router.get('/', async (req, res) => {
       params.push(employeeId);
     }
 
-    if (periodId) {
+    if (parsedPeriodId) {
       query += ' AND p.period_id = ?';
-      params.push(periodId);
+      params.push(parsedPeriodId);
     }
 
     query += ' ORDER BY pp.start_date DESC, p.payroll_id DESC';
@@ -70,12 +86,14 @@ router.get('/', async (req, res) => {
 
 // GET /api/payroll/slip/:payrollId (Detailed Itemized Salary Slip)
 router.get('/slip/:payrollId', async (req, res) => {
-  const payrollId = parseInt(req.params.payrollId, 10);
+  const payrollId = parsePositiveInt(req.params.payrollId);
+  if (!payrollId) {
+    return res.status(400).json({ success: false, error: 'Invalid payrollId parameter.' });
+  }
 
   try {
-    // 1. Fetch header snapshot
     const [headers] = await pool.query(
-      `SELECT 
+      `SELECT
         p.payroll_id, p.employee_id, e.employee_code,
         CONCAT(e.first_name, ' ', e.last_name) AS full_name,
         e.email, d.department_name, e.designation,
@@ -97,7 +115,6 @@ router.get('/slip/:payrollId', async (req, res) => {
 
     const slip = headers[0];
 
-    // Data isolation check: If regular employee, verify ownership
     if (req.user.role !== 'HR_ADMIN' && slip.employee_id !== req.user.employee_id) {
       return res.status(403).json({
         success: false,
@@ -105,7 +122,6 @@ router.get('/slip/:payrollId', async (req, res) => {
       });
     }
 
-    // 2. Fetch normalized itemized breakdown
     const [items] = await pool.query(
       `SELECT item_id, item_type, item_name, amount, description
        FROM payroll_items
@@ -134,22 +150,32 @@ router.get('/slip/:payrollId', async (req, res) => {
 
 // POST /api/payroll/process (HR_ADMIN only: Procedural bulk or single calculation)
 router.post('/process', requireRole('HR_ADMIN'), async (req, res) => {
-  const { periodId, employeeId } = req.body;
+  const { periodId, employeeId } = req.body || {};
 
-  if (!periodId) {
-    return res.status(400).json({ success: false, error: 'periodId is required.' });
+  const parsedPeriodId = parsePositiveInt(periodId);
+  if (!parsedPeriodId) {
+    return res.status(400).json({ success: false, error: 'Valid positive integer periodId is required.' });
   }
 
-  try {
-    if (employeeId) {
-      // Process individual employee
-      const [spRes] = await pool.query(
-        `CALL sp_calculate_payroll(?, ?, ?, @pid, @net, @code, @msg);
-         SELECT @pid AS payroll_id, @net AS net_salary, @code AS status_code, @msg AS status_message;`,
-        [employeeId, periodId, req.user.employee_id]
-      );
+  let parsedEmpId = null;
+  if (employeeId !== undefined && employeeId !== null && employeeId !== '') {
+    parsedEmpId = parsePositiveInt(employeeId);
+    if (!parsedEmpId) {
+      return res.status(400).json({ success: false, error: 'Invalid employeeId.' });
+    }
+  }
 
-      const out = spRes[1][0];
+  const conn = await pool.getConnection();
+  try {
+    const [pRows] = await conn.query('SELECT period_id FROM payroll_periods WHERE period_id = ?', [parsedPeriodId]);
+    if (pRows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Specified payroll period does not exist.' });
+    }
+
+    if (parsedEmpId) {
+      await conn.query('CALL sp_calculate_payroll(?, ?, ?, @pid, @net, @code, @msg)', [parsedEmpId, parsedPeriodId, req.user.employee_id]);
+      const [[out]] = await conn.query('SELECT @pid AS payroll_id, @net AS net_salary, @code AS status_code, @msg AS status_message');
+
       if (out.status_code === 200) {
         return res.json({
           success: true,
@@ -157,24 +183,19 @@ router.post('/process', requireRole('HR_ADMIN'), async (req, res) => {
           payroll_id: out.payroll_id,
           net_salary: out.net_salary
         });
-      } else {
-        return res.status(out.status_code === 409 ? 409 : 400).json({
-          success: false,
-          error: out.status_message
-        });
       }
+      const httpCode = [403, 404, 409, 422].includes(out.status_code) ? out.status_code : 500;
+      return res.status(httpCode).json({
+        success: false,
+        error: out.status_message
+      });
     } else {
-      // Process bulk for whole period
-      const [bulkRes] = await pool.query(
-        `CALL sp_process_bulk_payroll(?, ?, @processed, @errors);
-         SELECT @processed AS processed_count, @errors AS error_count;`,
-        [periodId, req.user.employee_id]
-      );
+      await conn.query('CALL sp_process_bulk_payroll(?, ?, @processed, @errors)', [parsedPeriodId, req.user.employee_id]);
+      const [[out]] = await conn.query('SELECT @processed AS processed_count, @errors AS error_count');
 
-      const out = bulkRes[1][0];
       return res.json({
         success: true,
-        message: `Bulk payroll cycle processed. ${out.processed_count} calculated, ${out.error_count} skipped/duplicates.`,
+        message: `Bulk payroll cycle completed: ${out.processed_count} calculated, ${out.error_count} skipped (already processed or ineligible).`,
         processed_count: out.processed_count,
         error_count: out.error_count
       });
@@ -182,28 +203,29 @@ router.post('/process', requireRole('HR_ADMIN'), async (req, res) => {
   } catch (err) {
     console.error('Process payroll error:', err);
     res.status(500).json({ success: false, error: 'Payroll processing failed due to an internal server error.' });
+  } finally {
+    conn.release();
   }
 });
 
-// POST /api/payroll/test-rollback (Demonstrate ROLLBACK on constraint failure)
+// POST /api/payroll/test-rollback (HR_ADMIN only: Demonstrate ROLLBACK on constraint failure)
 router.post('/test-rollback', requireRole('HR_ADMIN'), async (req, res) => {
+  const conn = await pool.getConnection();
   try {
-    const [rbRes] = await pool.query(
-      `CALL sp_demonstrate_transaction_rollback(1, 1, ?, @res, @msg);
-       SELECT @res AS status, @msg AS message;`,
-      [req.user.employee_id]
-    );
+    await conn.query('CALL sp_demonstrate_transaction_rollback(1, 1, ?, @res, @msg)', [req.user.employee_id]);
+    const [[out]] = await conn.query('SELECT @res AS status, @msg AS message');
 
-    const out = rbRes[1][0];
     res.json({
       success: true,
-      demonstration: 'Transaction Rollback Test',
+      demonstration: 'Multi-Step Transaction Rollback Test',
       status: out.status,
       message: out.message
     });
   } catch (err) {
     console.error('Test rollback error:', err);
     res.status(500).json({ success: false, error: 'Transaction rollback test failed due to an internal server error.' });
+  } finally {
+    conn.release();
   }
 });
 

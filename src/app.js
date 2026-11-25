@@ -15,21 +15,31 @@ const auditRoutes = require('./routes/auditRoutes');
 
 const app = express();
 
-// Middlewares
+// Baseline HTTP security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'same-origin');
+  next();
+});
+
+// CORS policy
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
   : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173'];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow non-browser requests or matched origins
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(new Error('CORS policy: Access denied for this origin.'));
+    const err = new Error('CORS policy: Access denied for this origin.');
+    err.status = 403;
+    return callback(err);
   },
   credentials: true
 }));
+
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -68,6 +78,12 @@ app.use((req, res, next) => {
 
 // Global Error Handler
 app.use((err, req, res, next) => {
+  if (err && err.status === 403) {
+    return res.status(403).json({ success: false, error: err.message });
+  }
+  if (err && err.type === 'entity.parse.failed') {
+    return res.status(400).json({ success: false, error: 'Malformed JSON request body.' });
+  }
   console.error('Unhandled Server Error:', err);
   res.status(500).json({
     success: false,
