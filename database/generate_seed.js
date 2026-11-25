@@ -1,7 +1,7 @@
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
 
-const adminHash = '$2b$10$Fuw2o5MEL5KbrWtatGGYaea17..nAff99Na7gm/0cVUddyUxRH4dq'; // Admin123!
-const empHash = '$2b$10$B6foq2PtaZiyK1zyUc.Re.JXTfM2TDkT6L.cNHhd1my595grgnfq.';   // Employee123!
+const makeHash = (pwd) => bcrypt.hashSync(pwd, 10);
 
 const departments = [
   { id: 1, name: 'Engineering', desc: 'Software development, infrastructure, and QA' },
@@ -12,24 +12,24 @@ const departments = [
 ];
 
 const employees = [
-  { id: 1, code: 'EMP001', first: 'Alice', last: 'Morgan', email: 'alice.morgan@paytrace.local', phone: '+1-555-0101', dept: 2, desig: 'HR Director', role: 'HR_ADMIN', hash: adminHash, hire: '2024-01-15', basic: 95000, hra: 38000, spec: 17000, pf: 11400, pt: 200 },
-  { id: 2, code: 'EMP002', first: 'Robert', last: 'Chen', email: 'robert.chen@paytrace.local', phone: '+1-555-0102', dept: 1, desig: 'Engineering Manager', role: 'HR_ADMIN', hash: adminHash, hire: '2024-02-01', basic: 110000, hra: 44000, spec: 26000, pf: 13200, pt: 200 },
-  { id: 3, code: 'EMP003', first: 'David', last: 'Miller', email: 'david.miller@paytrace.local', phone: '+1-555-0103', dept: 1, desig: 'Senior Backend Engineer', role: 'EMPLOYEE', hash: empHash, hire: '2024-03-10', basic: 85000, hra: 34000, spec: 16000, pf: 10200, pt: 200 },
-  { id: 4, code: 'EMP004', first: 'Sarah', last: 'Jenkins', email: 'sarah.jenkins@paytrace.local', phone: '+1-555-0104', dept: 1, desig: 'Frontend Engineer', role: 'EMPLOYEE', hash: empHash, hire: '2024-04-15', basic: 65000, hra: 26000, spec: 9000, pf: 7800, pt: 200 },
-  { id: 5, code: 'EMP005', first: 'Elena', last: 'Rostova', email: 'elena.rostova@paytrace.local', phone: '+1-555-0105', dept: 1, desig: 'DevOps Specialist', role: 'EMPLOYEE', hash: empHash, hire: '2024-05-01', basic: 75000, hra: 30000, spec: 15000, pf: 9000, pt: 200 },
-  { id: 6, code: 'EMP006', first: 'James', last: 'Wilson', email: 'james.wilson@paytrace.local', phone: '+1-555-0106', dept: 3, desig: 'Senior Financial Analyst', role: 'EMPLOYEE', hash: empHash, hire: '2024-02-15', basic: 70000, hra: 28000, spec: 12000, pf: 8400, pt: 200 },
-  { id: 7, code: 'EMP007', first: 'Maria', last: 'Garcia', email: 'maria.garcia@paytrace.local', phone: '+1-555-0107', dept: 3, desig: 'Accountant', role: 'EMPLOYEE', hash: empHash, hire: '2024-06-01', basic: 48000, hra: 19200, spec: 7800, pf: 5760, pt: 200 },
-  { id: 8, code: 'EMP008', first: 'Liam', last: 'Patel', email: 'liam.patel@paytrace.local', phone: '+1-555-0108', dept: 4, desig: 'Marketing Lead', role: 'EMPLOYEE', hash: empHash, hire: '2024-03-01', basic: 62000, hra: 24800, spec: 10200, pf: 7440, pt: 200 },
-  { id: 9, code: 'EMP009', first: 'Chloe', last: 'Dubois', email: 'chloe.dubois@paytrace.local', phone: '+1-555-0109', dept: 4, desig: 'Content Specialist', role: 'EMPLOYEE', hash: empHash, hire: '2024-06-15', basic: 42000, hra: 16800, spec: 6200, pf: 5040, pt: 200 },
-  { id: 10, code: 'EMP010', first: 'Kevin', last: 'O\'\'Connor', email: 'kevin.oconnor@paytrace.local', phone: '+1-555-0110', dept: 5, desig: 'Operations Manager', role: 'EMPLOYEE', hash: empHash, hire: '2024-01-20', basic: 58000, hra: 23200, spec: 8800, pf: 6960, pt: 200 },
-  { id: 11, code: 'EMP011', first: 'Aisha', last: 'Khan', email: 'aisha.khan@paytrace.local', phone: '+1-555-0111', dept: 5, desig: 'Support Specialist', role: 'EMPLOYEE', hash: empHash, hire: '2024-05-10', basic: 35000, hra: 14000, spec: 6000, pf: 4200, pt: 200 },
-  { id: 12, code: 'EMP012', first: 'Marcus', last: 'Vance', email: 'marcus.vance@paytrace.local', phone: '+1-555-0112', dept: 1, desig: 'QA Automation Engineer', role: 'EMPLOYEE', hash: empHash, hire: '2024-04-01', basic: 55000, hra: 22000, spec: 8000, pf: 6600, pt: 200 }
+  { id: 1, code: 'EMP001', first: 'Alice', last: 'Morgan', email: 'alice.morgan@paytrace.local', phone: '+1-555-0101', dept: 2, desig: 'HR Director', role: 'HR_ADMIN', hash: makeHash('Admin123!'), hire: '2024-01-15', basic: 95000, hra: 38000, spec: 17000, pf: 11400, pt: 200 },
+  { id: 2, code: 'EMP002', first: 'Robert', last: 'Chen', email: 'robert.chen@paytrace.local', phone: '+1-555-0102', dept: 1, desig: 'Engineering Manager', role: 'HR_ADMIN', hash: makeHash('Admin123!'), hire: '2024-02-01', basic: 110000, hra: 44000, spec: 26000, pf: 13200, pt: 200 },
+  { id: 3, code: 'EMP003', first: 'David', last: 'Miller', email: 'david.miller@paytrace.local', phone: '+1-555-0103', dept: 1, desig: 'Senior Backend Engineer', role: 'EMPLOYEE', hash: makeHash('Employee123!'), hire: '2024-03-10', basic: 85000, hra: 34000, spec: 16000, pf: 10200, pt: 200 },
+  { id: 4, code: 'EMP004', first: 'Sarah', last: 'Jenkins', email: 'sarah.jenkins@paytrace.local', phone: '+1-555-0104', dept: 1, desig: 'Frontend Engineer', role: 'EMPLOYEE', hash: makeHash('Employee123!'), hire: '2024-04-15', basic: 65000, hra: 26000, spec: 9000, pf: 7800, pt: 200 },
+  { id: 5, code: 'EMP005', first: 'Elena', last: 'Rostova', email: 'elena.rostova@paytrace.local', phone: '+1-555-0105', dept: 1, desig: 'DevOps Specialist', role: 'EMPLOYEE', hash: makeHash('Employee123!'), hire: '2024-05-01', basic: 75000, hra: 30000, spec: 15000, pf: 9000, pt: 200 },
+  { id: 6, code: 'EMP006', first: 'James', last: 'Wilson', email: 'james.wilson@paytrace.local', phone: '+1-555-0106', dept: 3, desig: 'Senior Financial Analyst', role: 'EMPLOYEE', hash: makeHash('Employee123!'), hire: '2024-02-15', basic: 70000, hra: 28000, spec: 12000, pf: 8400, pt: 200 },
+  { id: 7, code: 'EMP007', first: 'Maria', last: 'Garcia', email: 'maria.garcia@paytrace.local', phone: '+1-555-0107', dept: 3, desig: 'Accountant', role: 'EMPLOYEE', hash: makeHash('Employee123!'), hire: '2024-06-01', basic: 48000, hra: 19200, spec: 7800, pf: 5760, pt: 200 },
+  { id: 8, code: 'EMP008', first: 'Liam', last: 'Patel', email: 'liam.patel@paytrace.local', phone: '+1-555-0108', dept: 4, desig: 'Marketing Lead', role: 'EMPLOYEE', hash: makeHash('Employee123!'), hire: '2024-03-01', basic: 62000, hra: 24800, spec: 10200, pf: 7440, pt: 200 },
+  { id: 9, code: 'EMP009', first: 'Chloe', last: 'Dubois', email: 'chloe.dubois@paytrace.local', phone: '+1-555-0109', dept: 4, desig: 'Content Specialist', role: 'EMPLOYEE', hash: makeHash('Employee123!'), hire: '2024-06-15', basic: 42000, hra: 16800, spec: 6200, pf: 5040, pt: 200 },
+  { id: 10, code: 'EMP010', first: 'Kevin', last: 'O\'\'Connor', email: 'kevin.oconnor@paytrace.local', phone: '+1-555-0110', dept: 5, desig: 'Operations Manager', role: 'EMPLOYEE', hash: makeHash('Employee123!'), hire: '2024-01-20', basic: 58000, hra: 23200, spec: 8800, pf: 6960, pt: 200 },
+  { id: 11, code: 'EMP011', first: 'Aisha', last: 'Khan', email: 'aisha.khan@paytrace.local', phone: '+1-555-0111', dept: 5, desig: 'Support Specialist', role: 'EMPLOYEE', hash: makeHash('Employee123!'), hire: '2024-05-10', basic: 35000, hra: 14000, spec: 6000, pf: 4200, pt: 200 },
+  { id: 12, code: 'EMP012', first: 'Marcus', last: 'Vance', email: 'marcus.vance@paytrace.local', phone: '+1-555-0112', dept: 1, desig: 'QA Automation Engineer', role: 'EMPLOYEE', hash: makeHash('Employee123!'), hire: '2024-04-01', basic: 55000, hra: 22000, spec: 8000, pf: 6600, pt: 200 }
 ];
 
 const periods = [
   { id: 1, name: 'June 2026', start: '2026-06-01', end: '2026-06-30', days: 22, status: 'CLOSED' },
   { id: 2, name: 'July 2026', start: '2026-07-01', end: '2026-07-31', days: 23, status: 'CLOSED' },
-  { id: 3, name: 'August 2026', start: '2026-08-01', end: '2026-08-31', days: 22, status: 'FINALIZED' }
+  { id: 3, name: 'August 2026', start: '2026-08-01', end: '2026-08-31', days: 21, status: 'FINALIZED' }
 ];
 
 const leaves = [

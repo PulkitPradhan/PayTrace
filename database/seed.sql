@@ -36,18 +36,18 @@ INSERT INTO `employees` (
   `employee_id`, `employee_code`, `first_name`, `last_name`, `email`, `phone`,
   `department_id`, `designation`, `role`, `password_hash`, `hire_date`, `status`
 ) VALUES
-(1, 'EMP001', 'Alice', 'Morgan', 'alice.morgan@paytrace.local', '+1-555-0101', 2, 'HR Director', 'HR_ADMIN', '$2b$10$Fuw2o5MEL5KbrWtatGGYaea17..nAff99Na7gm/0cVUddyUxRH4dq', '2024-01-15', 'ACTIVE'),
-(2, 'EMP002', 'Robert', 'Chen', 'robert.chen@paytrace.local', '+1-555-0102', 1, 'Engineering Manager', 'HR_ADMIN', '$2b$10$Fuw2o5MEL5KbrWtatGGYaea17..nAff99Na7gm/0cVUddyUxRH4dq', '2024-02-01', 'ACTIVE'),
-(3, 'EMP003', 'David', 'Miller', 'david.miller@paytrace.local', '+1-555-0103', 1, 'Senior Backend Engineer', 'EMPLOYEE', '$2b$10$B6foq2PtaZiyK1zyUc.Re.JXTfM2TDkT6L.cNHhd1my595grgnfq.', '2024-03-10', 'ACTIVE'),
-(4, 'EMP004', 'Sarah', 'Jenkins', 'sarah.jenkins@paytrace.local', '+1-555-0104', 1, 'Frontend Engineer', 'EMPLOYEE', '$2b$10$B6foq2PtaZiyK1zyUc.Re.JXTfM2TDkT6L.cNHhd1my595grgnfq.', '2024-04-15', 'ACTIVE'),
-(5, 'EMP005', 'Elena', 'Rostova', 'elena.rostova@paytrace.local', '+1-555-0105', 1, 'DevOps Specialist', 'EMPLOYEE', '$2b$10$B6foq2PtaZiyK1zyUc.Re.JXTfM2TDkT6L.cNHhd1my595grgnfq.', '2024-05-01', 'ACTIVE'),
-(6, 'EMP006', 'James', 'Wilson', 'james.wilson@paytrace.local', '+1-555-0106', 3, 'Senior Financial Analyst', 'EMPLOYEE', '$2b$10$B6foq2PtaZiyK1zyUc.Re.JXTfM2TDkT6L.cNHhd1my595grgnfq.', '2024-02-15', 'ACTIVE'),
-(7, 'EMP007', 'Maria', 'Garcia', 'maria.garcia@paytrace.local', '+1-555-0107', 3, 'Accountant', 'EMPLOYEE', '$2b$10$B6foq2PtaZiyK1zyUc.Re.JXTfM2TDkT6L.cNHhd1my595grgnfq.', '2024-06-01', 'ACTIVE'),
-(8, 'EMP008', 'Liam', 'Patel', 'liam.patel@paytrace.local', '+1-555-0108', 4, 'Marketing Lead', 'EMPLOYEE', '$2b$10$B6foq2PtaZiyK1zyUc.Re.JXTfM2TDkT6L.cNHhd1my595grgnfq.', '2024-03-01', 'ACTIVE'),
-(9, 'EMP009', 'Chloe', 'Dubois', 'chloe.dubois@paytrace.local', '+1-555-0109', 4, 'Content Specialist', 'EMPLOYEE', '$2b$10$B6foq2PtaZiyK1zyUc.Re.JXTfM2TDkT6L.cNHhd1my595grgnfq.', '2024-06-15', 'ACTIVE'),
-(10, 'EMP010', 'Kevin', 'O''Connor', 'kevin.oconnor@paytrace.local', '+1-555-0110', 5, 'Operations Manager', 'EMPLOYEE', '$2b$10$B6foq2PtaZiyK1zyUc.Re.JXTfM2TDkT6L.cNHhd1my595grgnfq.', '2024-01-20', 'ACTIVE'),
-(11, 'EMP011', 'Aisha', 'Khan', 'aisha.khan@paytrace.local', '+1-555-0111', 5, 'Support Specialist', 'EMPLOYEE', '$2b$10$B6foq2PtaZiyK1zyUc.Re.JXTfM2TDkT6L.cNHhd1my595grgnfq.', '2024-05-10', 'ACTIVE'),
-(12, 'EMP012', 'Marcus', 'Vance', 'marcus.vance@paytrace.local', '+1-555-0112', 1, 'QA Automation Engineer', 'EMPLOYEE', '$2b$10$B6foq2PtaZiyK1zyUc.Re.JXTfM2TDkT6L.cNHhd1my595grgnfq.', '2024-04-01', 'ACTIVE');
+(1, 'EMP001', 'Alice', 'Morgan', 'alice.morgan@paytrace.local', '+1-555-0101', 2, 'HR Director', 'HR_ADMIN', '$2b$10$cqvSuTvpEbHRgnh28R6wYOBECqX8KIWaRnSo3DZpj4GsoE7CuHJJ.', '2024-01-15', 'ACTIVE'),
+(2, 'EMP002', 'Robert', 'Chen', 'robert.chen@paytrace.local', '+1-555-0102', 1, 'Engineering Manager', 'HR_ADMIN', '$2b$10$Aityvj64H4seS/JQjurH9.X7arWhpsLHPWLYIZf5eTgWWMrf4oSLa', '2024-02-01', 'ACTIVE'),
+(3, 'EMP003', 'David', 'Miller', 'david.miller@paytrace.local', '+1-555-0103', 1, 'Senior Backend Engineer', 'EMPLOYEE', '$2b$10$nXcfGMsUpcAMEB/r7isSNeW8fvqx0p2G/AJHYzanXJZ8WDxd7ydJW', '2024-03-10', 'ACTIVE'),
+(4, 'EMP004', 'Sarah', 'Jenkins', 'sarah.jenkins@paytrace.local', '+1-555-0104', 1, 'Frontend Engineer', 'EMPLOYEE', '$2b$10$IkXGQjLbTtMJlIlDlumiXur0ilQUjRg0xhUbfsUZCN4c27jLS8QlO', '2024-04-15', 'ACTIVE'),
+(5, 'EMP005', 'Elena', 'Rostova', 'elena.rostova@paytrace.local', '+1-555-0105', 1, 'DevOps Specialist', 'EMPLOYEE', '$2b$10$l4cV4v.LaWVB6S5YifK1y.DuoIr/dV8q5NLA5/JVriDij4N/.VSla', '2024-05-01', 'ACTIVE'),
+(6, 'EMP006', 'James', 'Wilson', 'james.wilson@paytrace.local', '+1-555-0106', 3, 'Senior Financial Analyst', 'EMPLOYEE', '$2b$10$X3JPIPQ6lWMeuyCYpIibvu2DqhubdZJu9hZ8L4m2RWRljclpNygJu', '2024-02-15', 'ACTIVE'),
+(7, 'EMP007', 'Maria', 'Garcia', 'maria.garcia@paytrace.local', '+1-555-0107', 3, 'Accountant', 'EMPLOYEE', '$2b$10$eAYrj39s9LzY/8PVG2UaVO96BENmsUqIWY8XWDguq9JSEuCQi5rv6', '2024-06-01', 'ACTIVE'),
+(8, 'EMP008', 'Liam', 'Patel', 'liam.patel@paytrace.local', '+1-555-0108', 4, 'Marketing Lead', 'EMPLOYEE', '$2b$10$q67iV7YaE7RWwptgrjliLe7/txGS7fBMQQXJQ2CpdsyQ6DbqcpdWy', '2024-03-01', 'ACTIVE'),
+(9, 'EMP009', 'Chloe', 'Dubois', 'chloe.dubois@paytrace.local', '+1-555-0109', 4, 'Content Specialist', 'EMPLOYEE', '$2b$10$k4haJKvntC9rnbHhkQz6vegl.vWUAeh0o1ESEaKYJ.sexp9aNJXly', '2024-06-15', 'ACTIVE'),
+(10, 'EMP010', 'Kevin', 'O''Connor', 'kevin.oconnor@paytrace.local', '+1-555-0110', 5, 'Operations Manager', 'EMPLOYEE', '$2b$10$9VaWGbzXaT.TFwTAQSkna.R0YqBt.TCsNBX692/Z5SV37HLeiObRu', '2024-01-20', 'ACTIVE'),
+(11, 'EMP011', 'Aisha', 'Khan', 'aisha.khan@paytrace.local', '+1-555-0111', 5, 'Support Specialist', 'EMPLOYEE', '$2b$10$.9dKU0BiwnWTTGM5g13Ax.A2aN5BXOPcVfPFRp4xYGQTLcsj26suW', '2024-05-10', 'ACTIVE'),
+(12, 'EMP012', 'Marcus', 'Vance', 'marcus.vance@paytrace.local', '+1-555-0112', 1, 'QA Automation Engineer', 'EMPLOYEE', '$2b$10$OokUeIngi9SCb4GwebBV2.ZXVrZ6pfDo1qiHukJSCqBVFh87Qtlp2', '2024-04-01', 'ACTIVE');
 
 -- ----------------------------------------------------------------------------
 -- 3. Seed Salary Structures (Active baseline configurations)
@@ -75,7 +75,7 @@ INSERT INTO `salary_structures` (
 INSERT INTO `payroll_periods` (`period_id`, `period_name`, `start_date`, `end_date`, `total_working_days`, `status`) VALUES
 (1, 'June 2026', '2026-06-01', '2026-06-30', 22, 'CLOSED'),
 (2, 'July 2026', '2026-07-01', '2026-07-31', 23, 'CLOSED'),
-(3, 'August 2026', '2026-08-01', '2026-08-31', 22, 'FINALIZED');
+(3, 'August 2026', '2026-08-01', '2026-08-31', 21, 'FINALIZED');
 
 -- ----------------------------------------------------------------------------
 -- 5. Seed Leaves (Approved, Rejected, and Pending)
