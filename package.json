@@ -10,6 +10,8 @@
   "scripts": {
     "start": "node src/server.js",
     "test": "node tests/test_suite.js",
+    "test:e2e": "node tests/browser_e2e.test.js",
+    "test:all": "npm test && npm run test:e2e",
     "setup": "mariadb -u root -h 127.0.0.1 < database/setup.sql"
   },
   "repository": {
