@@ -23,21 +23,22 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS policy
+// CORS policy (always allow same-origin host regardless of PORT, plus explicit allowedOrigins)
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
   : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173'];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    const err = new Error('CORS policy: Access denied for this origin.');
-    err.status = 403;
-    return callback(err);
-  },
-  credentials: true
+app.use(cors((req, callback) => {
+  const origin = req.header('Origin');
+  const sameOriginHttp = req.header('Host') ? `http://${req.header('Host')}` : null;
+  const sameOriginHttps = req.header('Host') ? `https://${req.header('Host')}` : null;
+
+  if (!origin || origin === sameOriginHttp || origin === sameOriginHttps || allowedOrigins.includes(origin)) {
+    return callback(null, { origin: true, credentials: true });
+  }
+  const err = new Error('CORS policy: Access denied for this origin.');
+  err.status = 403;
+  return callback(err);
 }));
 
 app.use(morgan('dev'));
