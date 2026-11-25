@@ -1,6 +1,6 @@
 -- ============================================================================
--- PayTrace: Master Setup Script (Phase 2)
--- Executes complete schema, functions, triggers, procedures, and seed data.
+-- PayTrace: Master Setup Script (Phases 1-3)
+-- Executes schema, functions, triggers, procedures, indexes, and seed data.
 -- ============================================================================
 
 CREATE DATABASE IF NOT EXISTS `paytrace_db`
@@ -9,19 +9,22 @@ CREATE DATABASE IF NOT EXISTS `paytrace_db`
 
 USE `paytrace_db`;
 
-SELECT 'Step 1/5: Loading schema...' AS progress;
+SELECT 'Step 1/6: Loading schema...' AS progress;
 SOURCE database/schema.sql;
 
-SELECT 'Step 2/5: Loading stored functions...' AS progress;
+SELECT 'Step 2/6: Loading stored functions...' AS progress;
 SOURCE database/functions.sql;
 
-SELECT 'Step 3/5: Loading triggers...' AS progress;
+SELECT 'Step 3/6: Loading triggers...' AS progress;
 SOURCE database/triggers.sql;
 
-SELECT 'Step 4/5: Loading stored procedures...' AS progress;
+SELECT 'Step 4/6: Loading stored procedures...' AS progress;
 SOURCE database/procedures.sql;
 
-SELECT 'Step 5/5: Loading seed dataset and executing procedural payroll calculation...' AS progress;
+SELECT 'Step 5/6: Installing performance indexes...' AS progress;
+SOURCE database/indexes.sql;
+
+SELECT 'Step 6/6: Loading seed dataset and executing procedural payroll calculation...' AS progress;
 SOURCE database/seed.sql;
 
 SELECT 'Master database setup completed successfully.' AS status;
